@@ -5,7 +5,6 @@ package gql
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Faroukhamadi/likude/ent"
 	"github.com/Faroukhamadi/likude/graphql/gql/generated"
@@ -14,7 +13,10 @@ import (
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*ent.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.client.User.Create().
+		SetUsername(input.Username).
+		SetPassword(input.Password).
+		Save(ctx)
 }
 
 // Users is the resolver for the users field.

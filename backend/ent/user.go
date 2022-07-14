@@ -25,7 +25,7 @@ type User struct {
 	// Password holds the value of the "password" field.
 	Password string `json:"password,omitempty"`
 	// Karma holds the value of the "karma" field.
-	Karma float32 `json:"karma,omitempty"`
+	Karma *int `json:"karma,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges UserEdges `json:"edges"`
@@ -67,9 +67,7 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldKarma:
-			values[i] = new(sql.NullFloat64)
-		case user.FieldID:
+		case user.FieldID, user.FieldKarma:
 			values[i] = new(sql.NullInt64)
 		case user.FieldUsername, user.FieldPassword:
 			values[i] = new(sql.NullString)
@@ -121,10 +119,11 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 				u.Password = value.String
 			}
 		case user.FieldKarma:
-			if value, ok := values[i].(*sql.NullFloat64); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field karma", values[i])
 			} else if value.Valid {
-				u.Karma = float32(value.Float64)
+				u.Karma = new(int)
+				*u.Karma = int(value.Int64)
 			}
 		}
 	}
@@ -176,8 +175,10 @@ func (u *User) String() string {
 	builder.WriteString("password=")
 	builder.WriteString(u.Password)
 	builder.WriteString(", ")
-	builder.WriteString("karma=")
-	builder.WriteString(fmt.Sprintf("%v", u.Karma))
+	if v := u.Karma; v != nil {
+		builder.WriteString("karma=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -63,8 +63,16 @@ func (uc *UserCreate) SetPassword(s string) *UserCreate {
 }
 
 // SetKarma sets the "karma" field.
-func (uc *UserCreate) SetKarma(f float32) *UserCreate {
-	uc.mutation.SetKarma(f)
+func (uc *UserCreate) SetKarma(i int) *UserCreate {
+	uc.mutation.SetKarma(i)
+	return uc
+}
+
+// SetNillableKarma sets the "karma" field if the given value is not nil.
+func (uc *UserCreate) SetNillableKarma(i *int) *UserCreate {
+	if i != nil {
+		uc.SetKarma(*i)
+	}
 	return uc
 }
 
@@ -183,6 +191,10 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultUpdatedAt()
 		uc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := uc.mutation.Karma(); !ok {
+		v := user.DefaultKarma
+		uc.mutation.SetKarma(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -198,9 +210,6 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.Password(); !ok {
 		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
-	}
-	if _, ok := uc.mutation.Karma(); !ok {
-		return &ValidationError{Name: "karma", err: errors.New(`ent: missing required field "User.karma"`)}
 	}
 	return nil
 }
@@ -263,11 +272,11 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := uc.mutation.Karma(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeInt,
 			Value:  value,
 			Column: user.FieldKarma,
 		})
-		_node.Karma = value
+		_node.Karma = &value
 	}
 	if nodes := uc.mutation.PostsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

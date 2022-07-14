@@ -4,7 +4,7 @@ type User {
 	id: ID!
 	username: String
 	password: String
-	karma: Float
+	karma: Int
 	createdAt: Time
 	updatedAt: Time
 }

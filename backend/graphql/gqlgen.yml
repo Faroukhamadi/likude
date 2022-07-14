@@ -19,9 +19,7 @@ autobind:
   - github.com/Faroukhamadi/likude/ent
 
 models:
-  ID:
-    model:
-      - github.com/99designs/gqlgen/graphql.IntID
-  Node:
-    model:
-      - github.com/xamandar/postowned-api/ent.Noder
+  User:
+    fields:
+      karma:
+        resolver: false

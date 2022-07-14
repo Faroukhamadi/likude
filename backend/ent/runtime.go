@@ -92,4 +92,8 @@ func init() {
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userDescKarma is the schema descriptor for karma field.
+	userDescKarma := userFields[2].Descriptor()
+	// user.DefaultKarma holds the default value on creation for the karma field.
+	user.DefaultKarma = userDescKarma.Default.(int)
 }

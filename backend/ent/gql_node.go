@@ -433,7 +433,7 @@ func (u *User) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Fields[4] = &Field{
-		Type:  "float32",
+		Type:  "int",
 		Name:  "karma",
 		Value: string(buf),
 	}

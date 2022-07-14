@@ -153,7 +153,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString},
-		{Name: "karma", Type: field.TypeFloat32},
+		{Name: "karma", Type: field.TypeInt, Nullable: true, Default: 0},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{

@@ -3774,8 +3774,8 @@ type UserMutation struct {
 	updated_at         *time.Time
 	username           *string
 	password           *string
-	karma              *float32
-	addkarma           *float32
+	karma              *int
+	addkarma           *int
 	clearedFields      map[string]struct{}
 	posts              map[int]struct{}
 	removedposts       map[int]struct{}
@@ -4031,13 +4031,13 @@ func (m *UserMutation) ResetPassword() {
 }
 
 // SetKarma sets the "karma" field.
-func (m *UserMutation) SetKarma(f float32) {
-	m.karma = &f
+func (m *UserMutation) SetKarma(i int) {
+	m.karma = &i
 	m.addkarma = nil
 }
 
 // Karma returns the value of the "karma" field in the mutation.
-func (m *UserMutation) Karma() (r float32, exists bool) {
+func (m *UserMutation) Karma() (r int, exists bool) {
 	v := m.karma
 	if v == nil {
 		return
@@ -4048,7 +4048,7 @@ func (m *UserMutation) Karma() (r float32, exists bool) {
 // OldKarma returns the old "karma" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldKarma(ctx context.Context) (v float32, err error) {
+func (m *UserMutation) OldKarma(ctx context.Context) (v *int, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldKarma is only allowed on UpdateOne operations")
 	}
@@ -4062,17 +4062,17 @@ func (m *UserMutation) OldKarma(ctx context.Context) (v float32, err error) {
 	return oldValue.Karma, nil
 }
 
-// AddKarma adds f to the "karma" field.
-func (m *UserMutation) AddKarma(f float32) {
+// AddKarma adds i to the "karma" field.
+func (m *UserMutation) AddKarma(i int) {
 	if m.addkarma != nil {
-		*m.addkarma += f
+		*m.addkarma += i
 	} else {
-		m.addkarma = &f
+		m.addkarma = &i
 	}
 }
 
 // AddedKarma returns the value that was added to the "karma" field in this mutation.
-func (m *UserMutation) AddedKarma() (r float32, exists bool) {
+func (m *UserMutation) AddedKarma() (r int, exists bool) {
 	v := m.addkarma
 	if v == nil {
 		return
@@ -4080,10 +4080,24 @@ func (m *UserMutation) AddedKarma() (r float32, exists bool) {
 	return *v, true
 }
 
+// ClearKarma clears the value of the "karma" field.
+func (m *UserMutation) ClearKarma() {
+	m.karma = nil
+	m.addkarma = nil
+	m.clearedFields[user.FieldKarma] = struct{}{}
+}
+
+// KarmaCleared returns if the "karma" field was cleared in this mutation.
+func (m *UserMutation) KarmaCleared() bool {
+	_, ok := m.clearedFields[user.FieldKarma]
+	return ok
+}
+
 // ResetKarma resets all changes to the "karma" field.
 func (m *UserMutation) ResetKarma() {
 	m.karma = nil
 	m.addkarma = nil
+	delete(m.clearedFields, user.FieldKarma)
 }
 
 // AddPostIDs adds the "posts" edge to the Post entity by ids.
@@ -4304,7 +4318,7 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		m.SetPassword(v)
 		return nil
 	case user.FieldKarma:
-		v, ok := value.(float32)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -4341,7 +4355,7 @@ func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
 func (m *UserMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case user.FieldKarma:
-		v, ok := value.(float32)
+		v, ok := value.(int)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -4354,7 +4368,11 @@ func (m *UserMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *UserMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(user.FieldKarma) {
+		fields = append(fields, user.FieldKarma)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -4367,6 +4385,11 @@ func (m *UserMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *UserMutation) ClearField(name string) error {
+	switch name {
+	case user.FieldKarma:
+		m.ClearKarma()
+		return nil
+	}
 	return fmt.Errorf("unknown User nullable field %s", name)
 }
 

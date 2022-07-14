@@ -24,7 +24,10 @@ func (User) Fields() []ent.Field {
 		field.String("username").
 			Unique(),
 		field.String("password"),
-		field.Float32("karma"),
+		field.Int("karma").
+			Default(0).
+			Nillable().
+			Optional(),
 	}
 }
 

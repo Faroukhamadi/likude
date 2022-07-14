@@ -110,7 +110,7 @@ func Password(v string) predicate.User {
 }
 
 // Karma applies equality check predicate on the "karma" field. It's identical to KarmaEQ.
-func Karma(v float32) predicate.User {
+func Karma(v int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldKarma), v))
 	})
@@ -491,21 +491,21 @@ func PasswordContainsFold(v string) predicate.User {
 }
 
 // KarmaEQ applies the EQ predicate on the "karma" field.
-func KarmaEQ(v float32) predicate.User {
+func KarmaEQ(v int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldKarma), v))
 	})
 }
 
 // KarmaNEQ applies the NEQ predicate on the "karma" field.
-func KarmaNEQ(v float32) predicate.User {
+func KarmaNEQ(v int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldKarma), v))
 	})
 }
 
 // KarmaIn applies the In predicate on the "karma" field.
-func KarmaIn(vs ...float32) predicate.User {
+func KarmaIn(vs ...int) predicate.User {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -522,7 +522,7 @@ func KarmaIn(vs ...float32) predicate.User {
 }
 
 // KarmaNotIn applies the NotIn predicate on the "karma" field.
-func KarmaNotIn(vs ...float32) predicate.User {
+func KarmaNotIn(vs ...int) predicate.User {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -539,30 +539,44 @@ func KarmaNotIn(vs ...float32) predicate.User {
 }
 
 // KarmaGT applies the GT predicate on the "karma" field.
-func KarmaGT(v float32) predicate.User {
+func KarmaGT(v int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldKarma), v))
 	})
 }
 
 // KarmaGTE applies the GTE predicate on the "karma" field.
-func KarmaGTE(v float32) predicate.User {
+func KarmaGTE(v int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldKarma), v))
 	})
 }
 
 // KarmaLT applies the LT predicate on the "karma" field.
-func KarmaLT(v float32) predicate.User {
+func KarmaLT(v int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldKarma), v))
 	})
 }
 
 // KarmaLTE applies the LTE predicate on the "karma" field.
-func KarmaLTE(v float32) predicate.User {
+func KarmaLTE(v int) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldKarma), v))
+	})
+}
+
+// KarmaIsNil applies the IsNil predicate on the "karma" field.
+func KarmaIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldKarma)))
+	})
+}
+
+// KarmaNotNil applies the NotNil predicate on the "karma" field.
+func KarmaNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldKarma)))
 	})
 }
 

@@ -49,15 +49,29 @@ func (uu *UserUpdate) SetPassword(s string) *UserUpdate {
 }
 
 // SetKarma sets the "karma" field.
-func (uu *UserUpdate) SetKarma(f float32) *UserUpdate {
+func (uu *UserUpdate) SetKarma(i int) *UserUpdate {
 	uu.mutation.ResetKarma()
-	uu.mutation.SetKarma(f)
+	uu.mutation.SetKarma(i)
 	return uu
 }
 
-// AddKarma adds f to the "karma" field.
-func (uu *UserUpdate) AddKarma(f float32) *UserUpdate {
-	uu.mutation.AddKarma(f)
+// SetNillableKarma sets the "karma" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableKarma(i *int) *UserUpdate {
+	if i != nil {
+		uu.SetKarma(*i)
+	}
+	return uu
+}
+
+// AddKarma adds i to the "karma" field.
+func (uu *UserUpdate) AddKarma(i int) *UserUpdate {
+	uu.mutation.AddKarma(i)
+	return uu
+}
+
+// ClearKarma clears the value of the "karma" field.
+func (uu *UserUpdate) ClearKarma() *UserUpdate {
+	uu.mutation.ClearKarma()
 	return uu
 }
 
@@ -242,15 +256,21 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.Karma(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeInt,
 			Value:  value,
 			Column: user.FieldKarma,
 		})
 	}
 	if value, ok := uu.mutation.AddedKarma(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeInt,
 			Value:  value,
+			Column: user.FieldKarma,
+		})
+	}
+	if uu.mutation.KarmaCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
 			Column: user.FieldKarma,
 		})
 	}
@@ -400,15 +420,29 @@ func (uuo *UserUpdateOne) SetPassword(s string) *UserUpdateOne {
 }
 
 // SetKarma sets the "karma" field.
-func (uuo *UserUpdateOne) SetKarma(f float32) *UserUpdateOne {
+func (uuo *UserUpdateOne) SetKarma(i int) *UserUpdateOne {
 	uuo.mutation.ResetKarma()
-	uuo.mutation.SetKarma(f)
+	uuo.mutation.SetKarma(i)
 	return uuo
 }
 
-// AddKarma adds f to the "karma" field.
-func (uuo *UserUpdateOne) AddKarma(f float32) *UserUpdateOne {
-	uuo.mutation.AddKarma(f)
+// SetNillableKarma sets the "karma" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableKarma(i *int) *UserUpdateOne {
+	if i != nil {
+		uuo.SetKarma(*i)
+	}
+	return uuo
+}
+
+// AddKarma adds i to the "karma" field.
+func (uuo *UserUpdateOne) AddKarma(i int) *UserUpdateOne {
+	uuo.mutation.AddKarma(i)
+	return uuo
+}
+
+// ClearKarma clears the value of the "karma" field.
+func (uuo *UserUpdateOne) ClearKarma() *UserUpdateOne {
+	uuo.mutation.ClearKarma()
 	return uuo
 }
 
@@ -623,15 +657,21 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.Karma(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeInt,
 			Value:  value,
 			Column: user.FieldKarma,
 		})
 	}
 	if value, ok := uuo.mutation.AddedKarma(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeInt,
 			Value:  value,
+			Column: user.FieldKarma,
+		})
+	}
+	if uuo.mutation.KarmaCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
 			Column: user.FieldKarma,
 		})
 	}

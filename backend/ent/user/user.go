@@ -74,4 +74,6 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultKarma holds the default value on creation for the "karma" field.
+	DefaultKarma int
 )
