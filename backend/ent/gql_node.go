@@ -510,7 +510,7 @@ func (c *Client) newNodeOpts(opts []NodeOption) *nodeOptions {
 // be derived from the id value according to the universal-id configuration.
 //
 //		c.Noder(ctx, id)
-//		c.Noder(ctx, id, ent.WithNodeType(pet.Table))
+//		c.Noder(ctx, id, ent.WithNodeType(typeResolver))
 //
 func (c *Client) Noder(ctx context.Context, id int, opts ...NodeOption) (_ Noder, err error) {
 	defer func() {
@@ -528,73 +528,97 @@ func (c *Client) Noder(ctx context.Context, id int, opts ...NodeOption) (_ Noder
 func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error) {
 	switch table {
 	case comment.Table:
-		n, err := c.Comment.Query().
-			Where(comment.ID(id)).
-			CollectFields(ctx, "Comment").
-			Only(ctx)
+		query := c.Comment.Query().
+			Where(comment.ID(id))
+		query, err := query.CollectFields(ctx, "Comment")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
 		if err != nil {
 			return nil, err
 		}
 		return n, nil
 	case community.Table:
-		n, err := c.Community.Query().
-			Where(community.ID(id)).
-			CollectFields(ctx, "Community").
-			Only(ctx)
+		query := c.Community.Query().
+			Where(community.ID(id))
+		query, err := query.CollectFields(ctx, "Community")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
 		if err != nil {
 			return nil, err
 		}
 		return n, nil
 	case post.Table:
-		n, err := c.Post.Query().
-			Where(post.ID(id)).
-			CollectFields(ctx, "Post").
-			Only(ctx)
+		query := c.Post.Query().
+			Where(post.ID(id))
+		query, err := query.CollectFields(ctx, "Post")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
 		if err != nil {
 			return nil, err
 		}
 		return n, nil
 	case reply.Table:
-		n, err := c.Reply.Query().
-			Where(reply.ID(id)).
-			CollectFields(ctx, "Reply").
-			Only(ctx)
+		query := c.Reply.Query().
+			Where(reply.ID(id))
+		query, err := query.CollectFields(ctx, "Reply")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
 		if err != nil {
 			return nil, err
 		}
 		return n, nil
 	case subreply.Table:
-		n, err := c.Subreply.Query().
-			Where(subreply.ID(id)).
-			CollectFields(ctx, "Subreply").
-			Only(ctx)
+		query := c.Subreply.Query().
+			Where(subreply.ID(id))
+		query, err := query.CollectFields(ctx, "Subreply")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
 		if err != nil {
 			return nil, err
 		}
 		return n, nil
 	case topic.Table:
-		n, err := c.Topic.Query().
-			Where(topic.ID(id)).
-			CollectFields(ctx, "Topic").
-			Only(ctx)
+		query := c.Topic.Query().
+			Where(topic.ID(id))
+		query, err := query.CollectFields(ctx, "Topic")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
 		if err != nil {
 			return nil, err
 		}
 		return n, nil
 	case topicrelated.Table:
-		n, err := c.TopicRelated.Query().
-			Where(topicrelated.ID(id)).
-			CollectFields(ctx, "TopicRelated").
-			Only(ctx)
+		query := c.TopicRelated.Query().
+			Where(topicrelated.ID(id))
+		query, err := query.CollectFields(ctx, "TopicRelated")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
 		if err != nil {
 			return nil, err
 		}
 		return n, nil
 	case user.Table:
-		n, err := c.User.Query().
-			Where(user.ID(id)).
-			CollectFields(ctx, "User").
-			Only(ctx)
+		query := c.User.Query().
+			Where(user.ID(id))
+		query, err := query.CollectFields(ctx, "User")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -673,10 +697,13 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 	}
 	switch table {
 	case comment.Table:
-		nodes, err := c.Comment.Query().
-			Where(comment.IDIn(ids...)).
-			CollectFields(ctx, "Comment").
-			All(ctx)
+		query := c.Comment.Query().
+			Where(comment.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Comment")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -686,10 +713,13 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 			}
 		}
 	case community.Table:
-		nodes, err := c.Community.Query().
-			Where(community.IDIn(ids...)).
-			CollectFields(ctx, "Community").
-			All(ctx)
+		query := c.Community.Query().
+			Where(community.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Community")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -699,10 +729,13 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 			}
 		}
 	case post.Table:
-		nodes, err := c.Post.Query().
-			Where(post.IDIn(ids...)).
-			CollectFields(ctx, "Post").
-			All(ctx)
+		query := c.Post.Query().
+			Where(post.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Post")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -712,10 +745,13 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 			}
 		}
 	case reply.Table:
-		nodes, err := c.Reply.Query().
-			Where(reply.IDIn(ids...)).
-			CollectFields(ctx, "Reply").
-			All(ctx)
+		query := c.Reply.Query().
+			Where(reply.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Reply")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -725,10 +761,13 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 			}
 		}
 	case subreply.Table:
-		nodes, err := c.Subreply.Query().
-			Where(subreply.IDIn(ids...)).
-			CollectFields(ctx, "Subreply").
-			All(ctx)
+		query := c.Subreply.Query().
+			Where(subreply.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Subreply")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -738,10 +777,13 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 			}
 		}
 	case topic.Table:
-		nodes, err := c.Topic.Query().
-			Where(topic.IDIn(ids...)).
-			CollectFields(ctx, "Topic").
-			All(ctx)
+		query := c.Topic.Query().
+			Where(topic.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Topic")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -751,10 +793,13 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 			}
 		}
 	case topicrelated.Table:
-		nodes, err := c.TopicRelated.Query().
-			Where(topicrelated.IDIn(ids...)).
-			CollectFields(ctx, "TopicRelated").
-			All(ctx)
+		query := c.TopicRelated.Query().
+			Where(topicrelated.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "TopicRelated")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -764,10 +809,13 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 			}
 		}
 	case user.Table:
-		nodes, err := c.User.Query().
-			Where(user.IDIn(ids...)).
-			CollectFields(ctx, "User").
-			All(ctx)
+		query := c.User.Query().
+			Where(user.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "User")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}

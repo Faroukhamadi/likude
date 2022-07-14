@@ -27,6 +27,8 @@ type ReplyQuery struct {
 	// eager-loading edges.
 	withComment *CommentQuery
 	withFKs     bool
+	modifiers   []func(*sql.Selector)
+	loadTotal   []func(context.Context, []*Reply) error
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -375,6 +377,9 @@ func (rq *ReplyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Reply,
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	if len(rq.modifiers) > 0 {
+		_spec.Modifiers = rq.modifiers
+	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -414,11 +419,19 @@ func (rq *ReplyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Reply,
 		}
 	}
 
+	for i := range rq.loadTotal {
+		if err := rq.loadTotal[i](ctx, nodes); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
 func (rq *ReplyQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := rq.querySpec()
+	if len(rq.modifiers) > 0 {
+		_spec.Modifiers = rq.modifiers
+	}
 	_spec.Node.Columns = rq.fields
 	if len(rq.fields) > 0 {
 		_spec.Unique = rq.unique != nil && *rq.unique

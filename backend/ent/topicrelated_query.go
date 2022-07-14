@@ -27,6 +27,8 @@ type TopicRelatedQuery struct {
 	// eager-loading edges.
 	withTopic        *TopicQuery
 	withRelatedTopic *TopicQuery
+	modifiers        []func(*sql.Selector)
+	loadTotal        []func(context.Context, []*TopicRelated) error
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -403,6 +405,9 @@ func (trq *TopicRelatedQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
+	if len(trq.modifiers) > 0 {
+		_spec.Modifiers = trq.modifiers
+	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -465,11 +470,19 @@ func (trq *TopicRelatedQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		}
 	}
 
+	for i := range trq.loadTotal {
+		if err := trq.loadTotal[i](ctx, nodes); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
 func (trq *TopicRelatedQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := trq.querySpec()
+	if len(trq.modifiers) > 0 {
+		_spec.Modifiers = trq.modifiers
+	}
 	_spec.Node.Columns = trq.fields
 	if len(trq.fields) > 0 {
 		_spec.Unique = trq.unique != nil && *trq.unique
