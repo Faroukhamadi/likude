@@ -1,6 +1,10 @@
 scalar Time
 
-type User {
+interface Node {
+	id: ID!
+}
+
+type User implements Node {
 	id: ID!
 	username: String
 	password: String

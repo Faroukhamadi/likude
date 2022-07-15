@@ -1,3 +1,38 @@
+scalar Cursor
+
+type PageInfo {
+	hasNextPage: Boolean!
+	hasPreviousPage: Boolean!
+	startCursor: Cursor
+	endCursor: Cursor
+}
+
+type UserConnection {
+	totalCount: Int!
+	pageInfo: PageInfo!
+	edges: [UserEdge]
+}
+
+type UserEdge {
+	node: User
+	cursor: Cursor!
+}
+
+enum UserOrderField {
+	CREATED_AT
+	UPDATED_AT
+}
+
+enum OrderDirection {
+	ASC
+	DESC
+}
+
+input UserOrder {
+	direction: OrderDirection!
+	field: UserOrderField
+}
+
 type Mutation {
 	createUser(input: CreateUserInput!): User!
 	updateUser(id: ID!, input: UpdateUserInput!): User!
@@ -5,7 +40,15 @@ type Mutation {
 }
 
 type Query {
-	users: [User!]
+	users(
+		after: Cursor
+		first: Int
+		before: Cursor
+		last: Int
+		orderBy: UserOrder
+	): UserConnection!
+	node(id: ID!): Node
+	nodes(ids: [ID!]!): [Node]!
 }
 
 input CreateUserInput {

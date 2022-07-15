@@ -22,6 +22,10 @@ models:
   ID: # The GraphQL type ID is backed by
     model:
       - github.com/99designs/gqlgen/graphql.IntID # a go integer
+  Node:
+    model:
+      - github.com/Faroukhamadi/likude/ent.Noder
+
   User:
     fields:
       karma:

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/Faroukhamadi/likude/ent"
+	"github.com/Faroukhamadi/likude/ent/migrate"
 	"github.com/Faroukhamadi/likude/graphql/gql"
 )
 
@@ -32,7 +34,7 @@ func main() {
 	defer client.Close()
 
 	ctx := context.Background()
-	if err := client.Schema.Create(ctx); err != nil {
+	if err := client.Schema.Create(ctx, migrate.WithGlobalUniqueID(true)); err != nil {
 		log.Fatal(err)
 	}
 	client.User.Create()
@@ -43,6 +45,7 @@ func main() {
 	log.Println(users)
 
 	srv := handler.NewDefaultServer(gql.NewSchema(client))
+	srv.Use(entgql.Transactioner{TxOpener: client})
 	http.Handle("/",
 		playground.Handler("Likude", "/query"),
 	)
