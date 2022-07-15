@@ -6,3 +6,8 @@ type CreateUserInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+type UpdateUserInput struct {
+	Password *string `json:"password"`
+	Karma    *int    `json:"karma"`
+}

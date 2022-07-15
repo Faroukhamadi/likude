@@ -8,16 +8,3 @@ type User {
 	createdAt: Time
 	updatedAt: Time
 }
-
-input CreateUserInput {
-	username: String!
-	password: String!
-}
-
-type Mutation {
-	createUser(input: CreateUserInput!): User!
-}
-
-type Query {
-	users: [User!]
-}

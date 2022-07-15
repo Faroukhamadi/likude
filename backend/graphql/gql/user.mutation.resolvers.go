@@ -19,6 +19,26 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		Save(ctx)
 }
 
+// UpdateUser is the resolver for the updateUser field.
+func (r *mutationResolver) UpdateUser(ctx context.Context, id int, input model.UpdateUserInput) (*ent.User, error) {
+	if input.Karma == nil && input.Password == nil {
+		return r.client.User.Get(ctx, id)
+	} else if input.Karma == nil {
+		return r.client.User.UpdateOneID(id).
+			SetPassword(*input.Password).
+			Save(ctx)
+	} else {
+		return r.client.User.UpdateOneID(id).
+			SetKarma(*input.Karma).
+			Save(ctx)
+	}
+}
+
+// DeleteUser is the resolver for the deleteUser field.
+func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (int, error) {
+	return id, r.client.User.DeleteOneID(id).Exec(ctx)
+}
+
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*ent.User, error) {
 	return r.client.User.Query().All(ctx)

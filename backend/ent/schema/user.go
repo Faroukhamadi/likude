@@ -22,6 +22,7 @@ func (User) Mixin() []ent.Mixin {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username").
+			Immutable().
 			Unique(),
 		field.String("password"),
 		field.Int("karma").
