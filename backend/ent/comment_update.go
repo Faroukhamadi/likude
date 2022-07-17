@@ -55,23 +55,19 @@ func (cu *CommentUpdate) AddPoints(f float32) *CommentUpdate {
 	return cu
 }
 
-// SetPostID sets the "post" edge to the Post entity by ID.
-func (cu *CommentUpdate) SetPostID(id int) *CommentUpdate {
-	cu.mutation.SetPostID(id)
+// AddPostIDs adds the "post" edge to the Post entity by IDs.
+func (cu *CommentUpdate) AddPostIDs(ids ...int) *CommentUpdate {
+	cu.mutation.AddPostIDs(ids...)
 	return cu
 }
 
-// SetNillablePostID sets the "post" edge to the Post entity by ID if the given value is not nil.
-func (cu *CommentUpdate) SetNillablePostID(id *int) *CommentUpdate {
-	if id != nil {
-		cu = cu.SetPostID(*id)
+// AddPost adds the "post" edges to the Post entity.
+func (cu *CommentUpdate) AddPost(p ...*Post) *CommentUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return cu
-}
-
-// SetPost sets the "post" edge to the Post entity.
-func (cu *CommentUpdate) SetPost(p *Post) *CommentUpdate {
-	return cu.SetPostID(p.ID)
+	return cu.AddPostIDs(ids...)
 }
 
 // AddReplyIDs adds the "replies" edge to the Reply entity by IDs.
@@ -94,10 +90,25 @@ func (cu *CommentUpdate) Mutation() *CommentMutation {
 	return cu.mutation
 }
 
-// ClearPost clears the "post" edge to the Post entity.
+// ClearPost clears all "post" edges to the Post entity.
 func (cu *CommentUpdate) ClearPost() *CommentUpdate {
 	cu.mutation.ClearPost()
 	return cu
+}
+
+// RemovePostIDs removes the "post" edge to Post entities by IDs.
+func (cu *CommentUpdate) RemovePostIDs(ids ...int) *CommentUpdate {
+	cu.mutation.RemovePostIDs(ids...)
+	return cu
+}
+
+// RemovePost removes "post" edges to Post entities.
+func (cu *CommentUpdate) RemovePost(p ...*Post) *CommentUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cu.RemovePostIDs(ids...)
 }
 
 // ClearReplies clears all "replies" edges to the Reply entity.
@@ -232,10 +243,10 @@ func (cu *CommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if cu.mutation.PostCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   comment.PostTable,
-			Columns: []string{comment.PostColumn},
+			Columns: comment.PostPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -246,12 +257,31 @@ func (cu *CommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.PostIDs(); len(nodes) > 0 {
+	if nodes := cu.mutation.RemovedPostIDs(); len(nodes) > 0 && !cu.mutation.PostCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   comment.PostTable,
-			Columns: []string{comment.PostColumn},
+			Columns: comment.PostPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: post.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.PostIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   comment.PostTable,
+			Columns: comment.PostPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -267,10 +297,10 @@ func (cu *CommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if cu.mutation.RepliesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   comment.RepliesTable,
-			Columns: []string{comment.RepliesColumn},
+			Columns: comment.RepliesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -283,10 +313,10 @@ func (cu *CommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := cu.mutation.RemovedRepliesIDs(); len(nodes) > 0 && !cu.mutation.RepliesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   comment.RepliesTable,
-			Columns: []string{comment.RepliesColumn},
+			Columns: comment.RepliesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -302,10 +332,10 @@ func (cu *CommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := cu.mutation.RepliesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   comment.RepliesTable,
-			Columns: []string{comment.RepliesColumn},
+			Columns: comment.RepliesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -363,23 +393,19 @@ func (cuo *CommentUpdateOne) AddPoints(f float32) *CommentUpdateOne {
 	return cuo
 }
 
-// SetPostID sets the "post" edge to the Post entity by ID.
-func (cuo *CommentUpdateOne) SetPostID(id int) *CommentUpdateOne {
-	cuo.mutation.SetPostID(id)
+// AddPostIDs adds the "post" edge to the Post entity by IDs.
+func (cuo *CommentUpdateOne) AddPostIDs(ids ...int) *CommentUpdateOne {
+	cuo.mutation.AddPostIDs(ids...)
 	return cuo
 }
 
-// SetNillablePostID sets the "post" edge to the Post entity by ID if the given value is not nil.
-func (cuo *CommentUpdateOne) SetNillablePostID(id *int) *CommentUpdateOne {
-	if id != nil {
-		cuo = cuo.SetPostID(*id)
+// AddPost adds the "post" edges to the Post entity.
+func (cuo *CommentUpdateOne) AddPost(p ...*Post) *CommentUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
 	}
-	return cuo
-}
-
-// SetPost sets the "post" edge to the Post entity.
-func (cuo *CommentUpdateOne) SetPost(p *Post) *CommentUpdateOne {
-	return cuo.SetPostID(p.ID)
+	return cuo.AddPostIDs(ids...)
 }
 
 // AddReplyIDs adds the "replies" edge to the Reply entity by IDs.
@@ -402,10 +428,25 @@ func (cuo *CommentUpdateOne) Mutation() *CommentMutation {
 	return cuo.mutation
 }
 
-// ClearPost clears the "post" edge to the Post entity.
+// ClearPost clears all "post" edges to the Post entity.
 func (cuo *CommentUpdateOne) ClearPost() *CommentUpdateOne {
 	cuo.mutation.ClearPost()
 	return cuo
+}
+
+// RemovePostIDs removes the "post" edge to Post entities by IDs.
+func (cuo *CommentUpdateOne) RemovePostIDs(ids ...int) *CommentUpdateOne {
+	cuo.mutation.RemovePostIDs(ids...)
+	return cuo
+}
+
+// RemovePost removes "post" edges to Post entities.
+func (cuo *CommentUpdateOne) RemovePost(p ...*Post) *CommentUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cuo.RemovePostIDs(ids...)
 }
 
 // ClearReplies clears all "replies" edges to the Reply entity.
@@ -570,10 +611,10 @@ func (cuo *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err e
 	}
 	if cuo.mutation.PostCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   comment.PostTable,
-			Columns: []string{comment.PostColumn},
+			Columns: comment.PostPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -584,12 +625,31 @@ func (cuo *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.PostIDs(); len(nodes) > 0 {
+	if nodes := cuo.mutation.RemovedPostIDs(); len(nodes) > 0 && !cuo.mutation.PostCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   comment.PostTable,
-			Columns: []string{comment.PostColumn},
+			Columns: comment.PostPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: post.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.PostIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   comment.PostTable,
+			Columns: comment.PostPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -605,10 +665,10 @@ func (cuo *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err e
 	}
 	if cuo.mutation.RepliesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   comment.RepliesTable,
-			Columns: []string{comment.RepliesColumn},
+			Columns: comment.RepliesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -621,10 +681,10 @@ func (cuo *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err e
 	}
 	if nodes := cuo.mutation.RemovedRepliesIDs(); len(nodes) > 0 && !cuo.mutation.RepliesCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   comment.RepliesTable,
-			Columns: []string{comment.RepliesColumn},
+			Columns: comment.RepliesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -640,10 +700,10 @@ func (cuo *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err e
 	}
 	if nodes := cuo.mutation.RepliesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   comment.RepliesTable,
-			Columns: []string{comment.RepliesColumn},
+			Columns: comment.RepliesPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

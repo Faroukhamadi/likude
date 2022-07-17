@@ -18,7 +18,6 @@ import (
 	"github.com/Faroukhamadi/likude/ent/community"
 	"github.com/Faroukhamadi/likude/ent/post"
 	"github.com/Faroukhamadi/likude/ent/reply"
-	"github.com/Faroukhamadi/likude/ent/subreply"
 	"github.com/Faroukhamadi/likude/ent/topic"
 	"github.com/Faroukhamadi/likude/ent/topicrelated"
 	"github.com/Faroukhamadi/likude/ent/user"
@@ -213,7 +212,7 @@ func (po *Post) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Fields[4] = &Field{
-		Type:  "float32",
+		Type:  "float64",
 		Name:  "points",
 		Value: string(buf),
 	}
@@ -289,16 +288,6 @@ func (r *Reply) Node(ctx context.Context) (node *Node, err error) {
 		Scan(ctx, &node.Edges[0].IDs)
 	if err != nil {
 		return nil, err
-	}
-	return node, nil
-}
-
-func (s *Subreply) Node(ctx context.Context) (node *Node, err error) {
-	node = &Node{
-		ID:     s.ID,
-		Type:   "Subreply",
-		Fields: make([]*Field, 0),
-		Edges:  make([]*Edge, 0),
 	}
 	return node, nil
 }
@@ -575,18 +564,6 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 			return nil, err
 		}
 		return n, nil
-	case subreply.Table:
-		query := c.Subreply.Query().
-			Where(subreply.ID(id))
-		query, err := query.CollectFields(ctx, "Subreply")
-		if err != nil {
-			return nil, err
-		}
-		n, err := query.Only(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return n, nil
 	case topic.Table:
 		query := c.Topic.Query().
 			Where(topic.ID(id))
@@ -748,22 +725,6 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.Reply.Query().
 			Where(reply.IDIn(ids...))
 		query, err := query.CollectFields(ctx, "Reply")
-		if err != nil {
-			return nil, err
-		}
-		nodes, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, node := range nodes {
-			for _, noder := range idmap[node.ID] {
-				*noder = node
-			}
-		}
-	case subreply.Table:
-		query := c.Subreply.Query().
-			Where(subreply.IDIn(ids...))
-		query, err := query.CollectFields(ctx, "Subreply")
 		if err != nil {
 			return nil, err
 		}

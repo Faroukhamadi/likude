@@ -15,21 +15,12 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "content", Type: field.TypeString},
 		{Name: "points", Type: field.TypeFloat32},
-		{Name: "post_comments", Type: field.TypeInt, Nullable: true},
 	}
 	// CommentsTable holds the schema information for the "comments" table.
 	CommentsTable = &schema.Table{
 		Name:       "comments",
 		Columns:    CommentsColumns,
 		PrimaryKey: []*schema.Column{CommentsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "comments_posts_comments",
-				Columns:    []*schema.Column{CommentsColumns[5]},
-				RefColumns: []*schema.Column{PostsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// CommunitiesColumns holds the columns for the "communities" table.
 	CommunitiesColumns = []*schema.Column{
@@ -52,22 +43,13 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "title", Type: field.TypeString},
 		{Name: "content", Type: field.TypeString},
-		{Name: "points", Type: field.TypeFloat32},
-		{Name: "user_posts", Type: field.TypeInt, Nullable: true},
+		{Name: "points", Type: field.TypeFloat64},
 	}
 	// PostsTable holds the schema information for the "posts" table.
 	PostsTable = &schema.Table{
 		Name:       "posts",
 		Columns:    PostsColumns,
 		PrimaryKey: []*schema.Column{PostsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "posts_users_posts",
-				Columns:    []*schema.Column{PostsColumns[6]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// RepliesColumns holds the columns for the "replies" table.
 	RepliesColumns = []*schema.Column{
@@ -76,31 +58,12 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "content", Type: field.TypeString},
 		{Name: "points", Type: field.TypeFloat32},
-		{Name: "comment_replies", Type: field.TypeInt, Nullable: true},
 	}
 	// RepliesTable holds the schema information for the "replies" table.
 	RepliesTable = &schema.Table{
 		Name:       "replies",
 		Columns:    RepliesColumns,
 		PrimaryKey: []*schema.Column{RepliesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "replies_comments_replies",
-				Columns:    []*schema.Column{RepliesColumns[5]},
-				RefColumns: []*schema.Column{CommentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-	}
-	// SubrepliesColumns holds the columns for the "subreplies" table.
-	SubrepliesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-	}
-	// SubrepliesTable holds the schema information for the "subreplies" table.
-	SubrepliesTable = &schema.Table{
-		Name:       "subreplies",
-		Columns:    SubrepliesColumns,
-		PrimaryKey: []*schema.Column{SubrepliesColumns[0]},
 	}
 	// TopicsColumns holds the columns for the "topics" table.
 	TopicsColumns = []*schema.Column{
@@ -161,6 +124,31 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// CommentRepliesColumns holds the columns for the "comment_replies" table.
+	CommentRepliesColumns = []*schema.Column{
+		{Name: "comment_id", Type: field.TypeInt},
+		{Name: "reply_id", Type: field.TypeInt},
+	}
+	// CommentRepliesTable holds the schema information for the "comment_replies" table.
+	CommentRepliesTable = &schema.Table{
+		Name:       "comment_replies",
+		Columns:    CommentRepliesColumns,
+		PrimaryKey: []*schema.Column{CommentRepliesColumns[0], CommentRepliesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "comment_replies_comment_id",
+				Columns:    []*schema.Column{CommentRepliesColumns[0]},
+				RefColumns: []*schema.Column{CommentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "comment_replies_reply_id",
+				Columns:    []*schema.Column{CommentRepliesColumns[1]},
+				RefColumns: []*schema.Column{RepliesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// CommunityUsersColumns holds the columns for the "community_users" table.
 	CommunityUsersColumns = []*schema.Column{
 		{Name: "community_id", Type: field.TypeInt},
@@ -186,26 +174,81 @@ var (
 			},
 		},
 	}
+	// PostCommentsColumns holds the columns for the "post_comments" table.
+	PostCommentsColumns = []*schema.Column{
+		{Name: "post_id", Type: field.TypeInt},
+		{Name: "comment_id", Type: field.TypeInt},
+	}
+	// PostCommentsTable holds the schema information for the "post_comments" table.
+	PostCommentsTable = &schema.Table{
+		Name:       "post_comments",
+		Columns:    PostCommentsColumns,
+		PrimaryKey: []*schema.Column{PostCommentsColumns[0], PostCommentsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "post_comments_post_id",
+				Columns:    []*schema.Column{PostCommentsColumns[0]},
+				RefColumns: []*schema.Column{PostsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "post_comments_comment_id",
+				Columns:    []*schema.Column{PostCommentsColumns[1]},
+				RefColumns: []*schema.Column{CommentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// UserPostsColumns holds the columns for the "user_posts" table.
+	UserPostsColumns = []*schema.Column{
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "post_id", Type: field.TypeInt},
+	}
+	// UserPostsTable holds the schema information for the "user_posts" table.
+	UserPostsTable = &schema.Table{
+		Name:       "user_posts",
+		Columns:    UserPostsColumns,
+		PrimaryKey: []*schema.Column{UserPostsColumns[0], UserPostsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_posts_user_id",
+				Columns:    []*schema.Column{UserPostsColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_posts_post_id",
+				Columns:    []*schema.Column{UserPostsColumns[1]},
+				RefColumns: []*schema.Column{PostsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CommentsTable,
 		CommunitiesTable,
 		PostsTable,
 		RepliesTable,
-		SubrepliesTable,
 		TopicsTable,
 		TopicRelatedsTable,
 		UsersTable,
+		CommentRepliesTable,
 		CommunityUsersTable,
+		PostCommentsTable,
+		UserPostsTable,
 	}
 )
 
 func init() {
-	CommentsTable.ForeignKeys[0].RefTable = PostsTable
-	PostsTable.ForeignKeys[0].RefTable = UsersTable
-	RepliesTable.ForeignKeys[0].RefTable = CommentsTable
 	TopicRelatedsTable.ForeignKeys[0].RefTable = TopicsTable
 	TopicRelatedsTable.ForeignKeys[1].RefTable = TopicsTable
+	CommentRepliesTable.ForeignKeys[0].RefTable = CommentsTable
+	CommentRepliesTable.ForeignKeys[1].RefTable = RepliesTable
 	CommunityUsersTable.ForeignKeys[0].RefTable = CommunitiesTable
 	CommunityUsersTable.ForeignKeys[1].RefTable = UsersTable
+	PostCommentsTable.ForeignKeys[0].RefTable = PostsTable
+	PostCommentsTable.ForeignKeys[1].RefTable = CommentsTable
+	UserPostsTable.ForeignKeys[0].RefTable = UsersTable
+	UserPostsTable.ForeignKeys[1].RefTable = PostsTable
 }

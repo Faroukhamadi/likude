@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/Faroukhamadi/likude/ent/comment"
 	"github.com/Faroukhamadi/likude/ent/reply"
 )
 
@@ -27,14 +26,13 @@ type Reply struct {
 	Points float32 `json:"points,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ReplyQuery when eager-loading is set.
-	Edges           ReplyEdges `json:"edges"`
-	comment_replies *int
+	Edges ReplyEdges `json:"edges"`
 }
 
 // ReplyEdges holds the relations/edges for other nodes in the graph.
 type ReplyEdges struct {
 	// Comment holds the value of the comment edge.
-	Comment *Comment `json:"comment,omitempty"`
+	Comment []*Comment `json:"comment,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
@@ -43,14 +41,9 @@ type ReplyEdges struct {
 }
 
 // CommentOrErr returns the Comment value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e ReplyEdges) CommentOrErr() (*Comment, error) {
+// was not loaded in eager-loading.
+func (e ReplyEdges) CommentOrErr() ([]*Comment, error) {
 	if e.loadedTypes[0] {
-		if e.Comment == nil {
-			// The edge comment was loaded in eager-loading,
-			// but was not found.
-			return nil, &NotFoundError{label: comment.Label}
-		}
 		return e.Comment, nil
 	}
 	return nil, &NotLoadedError{edge: "comment"}
@@ -69,8 +62,6 @@ func (*Reply) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case reply.FieldCreatedAt, reply.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case reply.ForeignKeys[0]: // comment_replies
-			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Reply", columns[i])
 		}
@@ -115,13 +106,6 @@ func (r *Reply) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field points", values[i])
 			} else if value.Valid {
 				r.Points = float32(value.Float64)
-			}
-		case reply.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field comment_replies", value)
-			} else if value.Valid {
-				r.comment_replies = new(int)
-				*r.comment_replies = int(value.Int64)
 			}
 		}
 	}

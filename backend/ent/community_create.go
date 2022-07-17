@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Faroukhamadi/likude/ent/community"
@@ -19,6 +20,7 @@ type CommunityCreate struct {
 	config
 	mutation *CommunityMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -204,6 +206,7 @@ func (cc *CommunityCreate) createSpec() (*Community, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	_spec.OnConflict = cc.conflict
 	if value, ok := cc.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -258,10 +261,246 @@ func (cc *CommunityCreate) createSpec() (*Community, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Community.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.CommunityUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+//
+func (cc *CommunityCreate) OnConflict(opts ...sql.ConflictOption) *CommunityUpsertOne {
+	cc.conflict = opts
+	return &CommunityUpsertOne{
+		create: cc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Community.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+//
+func (cc *CommunityCreate) OnConflictColumns(columns ...string) *CommunityUpsertOne {
+	cc.conflict = append(cc.conflict, sql.ConflictColumns(columns...))
+	return &CommunityUpsertOne{
+		create: cc,
+	}
+}
+
+type (
+	// CommunityUpsertOne is the builder for "upsert"-ing
+	//  one Community node.
+	CommunityUpsertOne struct {
+		create *CommunityCreate
+	}
+
+	// CommunityUpsert is the "OnConflict" setter.
+	CommunityUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetCreatedAt sets the "created_at" field.
+func (u *CommunityUpsert) SetCreatedAt(v time.Time) *CommunityUpsert {
+	u.Set(community.FieldCreatedAt, v)
+	return u
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *CommunityUpsert) UpdateCreatedAt() *CommunityUpsert {
+	u.SetExcluded(community.FieldCreatedAt)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *CommunityUpsert) SetUpdatedAt(v time.Time) *CommunityUpsert {
+	u.Set(community.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *CommunityUpsert) UpdateUpdatedAt() *CommunityUpsert {
+	u.SetExcluded(community.FieldUpdatedAt)
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *CommunityUpsert) SetName(v string) *CommunityUpsert {
+	u.Set(community.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *CommunityUpsert) UpdateName() *CommunityUpsert {
+	u.SetExcluded(community.FieldName)
+	return u
+}
+
+// SetAbout sets the "about" field.
+func (u *CommunityUpsert) SetAbout(v string) *CommunityUpsert {
+	u.Set(community.FieldAbout, v)
+	return u
+}
+
+// UpdateAbout sets the "about" field to the value that was provided on create.
+func (u *CommunityUpsert) UpdateAbout() *CommunityUpsert {
+	u.SetExcluded(community.FieldAbout)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Community.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+//
+func (u *CommunityUpsertOne) UpdateNewValues() *CommunityUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(community.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//  client.Community.Create().
+//      OnConflict(sql.ResolveWithIgnore()).
+//      Exec(ctx)
+//
+func (u *CommunityUpsertOne) Ignore() *CommunityUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *CommunityUpsertOne) DoNothing() *CommunityUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the CommunityCreate.OnConflict
+// documentation for more info.
+func (u *CommunityUpsertOne) Update(set func(*CommunityUpsert)) *CommunityUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&CommunityUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *CommunityUpsertOne) SetCreatedAt(v time.Time) *CommunityUpsertOne {
+	return u.Update(func(s *CommunityUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *CommunityUpsertOne) UpdateCreatedAt() *CommunityUpsertOne {
+	return u.Update(func(s *CommunityUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *CommunityUpsertOne) SetUpdatedAt(v time.Time) *CommunityUpsertOne {
+	return u.Update(func(s *CommunityUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *CommunityUpsertOne) UpdateUpdatedAt() *CommunityUpsertOne {
+	return u.Update(func(s *CommunityUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *CommunityUpsertOne) SetName(v string) *CommunityUpsertOne {
+	return u.Update(func(s *CommunityUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *CommunityUpsertOne) UpdateName() *CommunityUpsertOne {
+	return u.Update(func(s *CommunityUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetAbout sets the "about" field.
+func (u *CommunityUpsertOne) SetAbout(v string) *CommunityUpsertOne {
+	return u.Update(func(s *CommunityUpsert) {
+		s.SetAbout(v)
+	})
+}
+
+// UpdateAbout sets the "about" field to the value that was provided on create.
+func (u *CommunityUpsertOne) UpdateAbout() *CommunityUpsertOne {
+	return u.Update(func(s *CommunityUpsert) {
+		s.UpdateAbout()
+	})
+}
+
+// Exec executes the query.
+func (u *CommunityUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for CommunityCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *CommunityUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *CommunityUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *CommunityUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // CommunityCreateBulk is the builder for creating many Community entities in bulk.
 type CommunityCreateBulk struct {
 	config
 	builders []*CommunityCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Community entities in the database.
@@ -288,6 +527,7 @@ func (ccb *CommunityCreateBulk) Save(ctx context.Context) ([]*Community, error) 
 					_, err = mutators[i+1].Mutate(root, ccb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = ccb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, ccb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -338,6 +578,174 @@ func (ccb *CommunityCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (ccb *CommunityCreateBulk) ExecX(ctx context.Context) {
 	if err := ccb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Community.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.CommunityUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+//
+func (ccb *CommunityCreateBulk) OnConflict(opts ...sql.ConflictOption) *CommunityUpsertBulk {
+	ccb.conflict = opts
+	return &CommunityUpsertBulk{
+		create: ccb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Community.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+//
+func (ccb *CommunityCreateBulk) OnConflictColumns(columns ...string) *CommunityUpsertBulk {
+	ccb.conflict = append(ccb.conflict, sql.ConflictColumns(columns...))
+	return &CommunityUpsertBulk{
+		create: ccb,
+	}
+}
+
+// CommunityUpsertBulk is the builder for "upsert"-ing
+// a bulk of Community nodes.
+type CommunityUpsertBulk struct {
+	create *CommunityCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Community.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+//
+func (u *CommunityUpsertBulk) UpdateNewValues() *CommunityUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(community.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Community.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+//
+func (u *CommunityUpsertBulk) Ignore() *CommunityUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *CommunityUpsertBulk) DoNothing() *CommunityUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the CommunityCreateBulk.OnConflict
+// documentation for more info.
+func (u *CommunityUpsertBulk) Update(set func(*CommunityUpsert)) *CommunityUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&CommunityUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *CommunityUpsertBulk) SetCreatedAt(v time.Time) *CommunityUpsertBulk {
+	return u.Update(func(s *CommunityUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *CommunityUpsertBulk) UpdateCreatedAt() *CommunityUpsertBulk {
+	return u.Update(func(s *CommunityUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *CommunityUpsertBulk) SetUpdatedAt(v time.Time) *CommunityUpsertBulk {
+	return u.Update(func(s *CommunityUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *CommunityUpsertBulk) UpdateUpdatedAt() *CommunityUpsertBulk {
+	return u.Update(func(s *CommunityUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *CommunityUpsertBulk) SetName(v string) *CommunityUpsertBulk {
+	return u.Update(func(s *CommunityUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *CommunityUpsertBulk) UpdateName() *CommunityUpsertBulk {
+	return u.Update(func(s *CommunityUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetAbout sets the "about" field.
+func (u *CommunityUpsertBulk) SetAbout(v string) *CommunityUpsertBulk {
+	return u.Update(func(s *CommunityUpsert) {
+		s.SetAbout(v)
+	})
+}
+
+// UpdateAbout sets the "about" field to the value that was provided on create.
+func (u *CommunityUpsertBulk) UpdateAbout() *CommunityUpsertBulk {
+	return u.Update(func(s *CommunityUpsert) {
+		s.UpdateAbout()
+	})
+}
+
+// Exec executes the query.
+func (u *CommunityUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the CommunityCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for CommunityCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *CommunityUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

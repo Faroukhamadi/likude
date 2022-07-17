@@ -27,13 +27,11 @@ const (
 	EdgeCommunities = "communities"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// PostsTable is the table that holds the posts relation/edge.
-	PostsTable = "posts"
+	// PostsTable is the table that holds the posts relation/edge. The primary key declared below.
+	PostsTable = "user_posts"
 	// PostsInverseTable is the table name for the Post entity.
 	// It exists in this package in order to avoid circular dependency with the "post" package.
 	PostsInverseTable = "posts"
-	// PostsColumn is the table column denoting the posts relation/edge.
-	PostsColumn = "user_posts"
 	// CommunitiesTable is the table that holds the communities relation/edge. The primary key declared below.
 	CommunitiesTable = "community_users"
 	// CommunitiesInverseTable is the table name for the Community entity.
@@ -52,6 +50,9 @@ var Columns = []string{
 }
 
 var (
+	// PostsPrimaryKey and PostsColumn2 are the table columns denoting the
+	// primary key for the posts relation (M2M).
+	PostsPrimaryKey = []string{"user_id", "post_id"}
 	// CommunitiesPrimaryKey and CommunitiesColumn2 are the table columns denoting the
 	// primary key for the communities relation (M2M).
 	CommunitiesPrimaryKey = []string{"community_id", "user_id"}

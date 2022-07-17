@@ -23,13 +23,11 @@ const (
 	EdgeComment = "comment"
 	// Table holds the table name of the reply in the database.
 	Table = "replies"
-	// CommentTable is the table that holds the comment relation/edge.
-	CommentTable = "replies"
+	// CommentTable is the table that holds the comment relation/edge. The primary key declared below.
+	CommentTable = "comment_replies"
 	// CommentInverseTable is the table name for the Comment entity.
 	// It exists in this package in order to avoid circular dependency with the "comment" package.
 	CommentInverseTable = "comments"
-	// CommentColumn is the table column denoting the comment relation/edge.
-	CommentColumn = "comment_replies"
 )
 
 // Columns holds all SQL columns for reply fields.
@@ -41,21 +39,16 @@ var Columns = []string{
 	FieldPoints,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "replies"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"comment_replies",
-}
+var (
+	// CommentPrimaryKey and CommentColumn2 are the table columns denoting the
+	// primary key for the comment relation (M2M).
+	CommentPrimaryKey = []string{"comment_id", "reply_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}

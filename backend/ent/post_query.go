@@ -29,7 +29,6 @@ type PostQuery struct {
 	// eager-loading edges.
 	withWriter   *UserQuery
 	withComments *CommentQuery
-	withFKs      bool
 	modifiers    []func(*sql.Selector)
 	loadTotal    []func(context.Context, []*Post) error
 	// intermediate query (i.e. traversal path).
@@ -82,7 +81,7 @@ func (pq *PostQuery) QueryWriter() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, post.WriterTable, post.WriterColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, post.WriterTable, post.WriterPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -104,7 +103,7 @@ func (pq *PostQuery) QueryComments() *CommentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, selector),
 			sqlgraph.To(comment.Table, comment.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, post.CommentsTable, post.CommentsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, post.CommentsTable, post.CommentsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -393,19 +392,12 @@ func (pq *PostQuery) prepareQuery(ctx context.Context) error {
 func (pq *PostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Post, error) {
 	var (
 		nodes       = []*Post{}
-		withFKs     = pq.withFKs
 		_spec       = pq.querySpec()
 		loadedTypes = [2]bool{
 			pq.withWriter != nil,
 			pq.withComments != nil,
 		}
 	)
-	if pq.withWriter != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, post.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		return (*Post).scanValues(nil, columns)
 	}
@@ -429,60 +421,108 @@ func (pq *PostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Post, e
 	}
 
 	if query := pq.withWriter; query != nil {
-		ids := make([]int, 0, len(nodes))
-		nodeids := make(map[int][]*Post)
-		for i := range nodes {
-			if nodes[i].user_posts == nil {
-				continue
-			}
-			fk := *nodes[i].user_posts
-			if _, ok := nodeids[fk]; !ok {
-				ids = append(ids, fk)
-			}
-			nodeids[fk] = append(nodeids[fk], nodes[i])
+		edgeids := make([]driver.Value, len(nodes))
+		byid := make(map[int]*Post)
+		nids := make(map[int]map[*Post]struct{})
+		for i, node := range nodes {
+			edgeids[i] = node.ID
+			byid[node.ID] = node
+			node.Edges.Writer = []*User{}
 		}
-		query.Where(user.IDIn(ids...))
-		neighbors, err := query.All(ctx)
+		query.Where(func(s *sql.Selector) {
+			joinT := sql.Table(post.WriterTable)
+			s.Join(joinT).On(s.C(user.FieldID), joinT.C(post.WriterPrimaryKey[0]))
+			s.Where(sql.InValues(joinT.C(post.WriterPrimaryKey[1]), edgeids...))
+			columns := s.SelectedColumns()
+			s.Select(joinT.C(post.WriterPrimaryKey[1]))
+			s.AppendSelect(columns...)
+			s.SetDistinct(false)
+		})
+		neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]interface{}, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]interface{}{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []interface{}) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Post]struct{}{byid[outValue]: struct{}{}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byid[outValue]] = struct{}{}
+				return nil
+			}
+		})
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := nodeids[n.ID]
+			nodes, ok := nids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "user_posts" returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected "writer" node returned %v`, n.ID)
 			}
-			for i := range nodes {
-				nodes[i].Edges.Writer = n
+			for kn := range nodes {
+				kn.Edges.Writer = append(kn.Edges.Writer, n)
 			}
 		}
 	}
 
 	if query := pq.withComments; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[int]*Post)
-		for i := range nodes {
-			fks = append(fks, nodes[i].ID)
-			nodeids[nodes[i].ID] = nodes[i]
-			nodes[i].Edges.Comments = []*Comment{}
+		edgeids := make([]driver.Value, len(nodes))
+		byid := make(map[int]*Post)
+		nids := make(map[int]map[*Post]struct{})
+		for i, node := range nodes {
+			edgeids[i] = node.ID
+			byid[node.ID] = node
+			node.Edges.Comments = []*Comment{}
 		}
-		query.withFKs = true
-		query.Where(predicate.Comment(func(s *sql.Selector) {
-			s.Where(sql.InValues(post.CommentsColumn, fks...))
-		}))
-		neighbors, err := query.All(ctx)
+		query.Where(func(s *sql.Selector) {
+			joinT := sql.Table(post.CommentsTable)
+			s.Join(joinT).On(s.C(comment.FieldID), joinT.C(post.CommentsPrimaryKey[1]))
+			s.Where(sql.InValues(joinT.C(post.CommentsPrimaryKey[0]), edgeids...))
+			columns := s.SelectedColumns()
+			s.Select(joinT.C(post.CommentsPrimaryKey[0]))
+			s.AppendSelect(columns...)
+			s.SetDistinct(false)
+		})
+		neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]interface{}, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]interface{}{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []interface{}) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Post]struct{}{byid[outValue]: struct{}{}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byid[outValue]] = struct{}{}
+				return nil
+			}
+		})
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			fk := n.post_comments
-			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "post_comments" is nil for node %v`, n.ID)
-			}
-			node, ok := nodeids[*fk]
+			nodes, ok := nids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "post_comments" returned %v for node %v`, *fk, n.ID)
+				return nil, fmt.Errorf(`unexpected "comments" node returned %v`, n.ID)
 			}
-			node.Edges.Comments = append(node.Edges.Comments, n)
+			for kn := range nodes {
+				kn.Edges.Comments = append(kn.Edges.Comments, n)
+			}
 		}
 	}
 

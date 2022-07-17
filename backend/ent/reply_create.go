@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Faroukhamadi/likude/ent/comment"
@@ -19,6 +20,7 @@ type ReplyCreate struct {
 	config
 	mutation *ReplyMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -61,23 +63,19 @@ func (rc *ReplyCreate) SetPoints(f float32) *ReplyCreate {
 	return rc
 }
 
-// SetCommentID sets the "comment" edge to the Comment entity by ID.
-func (rc *ReplyCreate) SetCommentID(id int) *ReplyCreate {
-	rc.mutation.SetCommentID(id)
+// AddCommentIDs adds the "comment" edge to the Comment entity by IDs.
+func (rc *ReplyCreate) AddCommentIDs(ids ...int) *ReplyCreate {
+	rc.mutation.AddCommentIDs(ids...)
 	return rc
 }
 
-// SetNillableCommentID sets the "comment" edge to the Comment entity by ID if the given value is not nil.
-func (rc *ReplyCreate) SetNillableCommentID(id *int) *ReplyCreate {
-	if id != nil {
-		rc = rc.SetCommentID(*id)
+// AddComment adds the "comment" edges to the Comment entity.
+func (rc *ReplyCreate) AddComment(c ...*Comment) *ReplyCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return rc
-}
-
-// SetComment sets the "comment" edge to the Comment entity.
-func (rc *ReplyCreate) SetComment(c *Comment) *ReplyCreate {
-	return rc.SetCommentID(c.ID)
+	return rc.AddCommentIDs(ids...)
 }
 
 // Mutation returns the ReplyMutation object of the builder.
@@ -208,6 +206,7 @@ func (rc *ReplyCreate) createSpec() (*Reply, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	_spec.OnConflict = rc.conflict
 	if value, ok := rc.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -242,10 +241,10 @@ func (rc *ReplyCreate) createSpec() (*Reply, *sqlgraph.CreateSpec) {
 	}
 	if nodes := rc.mutation.CommentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   reply.CommentTable,
-			Columns: []string{reply.CommentColumn},
+			Columns: reply.CommentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -257,16 +256,264 @@ func (rc *ReplyCreate) createSpec() (*Reply, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.comment_replies = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Reply.Create().
+//		SetCreatedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ReplyUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+//
+func (rc *ReplyCreate) OnConflict(opts ...sql.ConflictOption) *ReplyUpsertOne {
+	rc.conflict = opts
+	return &ReplyUpsertOne{
+		create: rc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Reply.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+//
+func (rc *ReplyCreate) OnConflictColumns(columns ...string) *ReplyUpsertOne {
+	rc.conflict = append(rc.conflict, sql.ConflictColumns(columns...))
+	return &ReplyUpsertOne{
+		create: rc,
+	}
+}
+
+type (
+	// ReplyUpsertOne is the builder for "upsert"-ing
+	//  one Reply node.
+	ReplyUpsertOne struct {
+		create *ReplyCreate
+	}
+
+	// ReplyUpsert is the "OnConflict" setter.
+	ReplyUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetCreatedAt sets the "created_at" field.
+func (u *ReplyUpsert) SetCreatedAt(v time.Time) *ReplyUpsert {
+	u.Set(reply.FieldCreatedAt, v)
+	return u
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *ReplyUpsert) UpdateCreatedAt() *ReplyUpsert {
+	u.SetExcluded(reply.FieldCreatedAt)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ReplyUpsert) SetUpdatedAt(v time.Time) *ReplyUpsert {
+	u.Set(reply.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ReplyUpsert) UpdateUpdatedAt() *ReplyUpsert {
+	u.SetExcluded(reply.FieldUpdatedAt)
+	return u
+}
+
+// SetContent sets the "content" field.
+func (u *ReplyUpsert) SetContent(v string) *ReplyUpsert {
+	u.Set(reply.FieldContent, v)
+	return u
+}
+
+// UpdateContent sets the "content" field to the value that was provided on create.
+func (u *ReplyUpsert) UpdateContent() *ReplyUpsert {
+	u.SetExcluded(reply.FieldContent)
+	return u
+}
+
+// SetPoints sets the "points" field.
+func (u *ReplyUpsert) SetPoints(v float32) *ReplyUpsert {
+	u.Set(reply.FieldPoints, v)
+	return u
+}
+
+// UpdatePoints sets the "points" field to the value that was provided on create.
+func (u *ReplyUpsert) UpdatePoints() *ReplyUpsert {
+	u.SetExcluded(reply.FieldPoints)
+	return u
+}
+
+// AddPoints adds v to the "points" field.
+func (u *ReplyUpsert) AddPoints(v float32) *ReplyUpsert {
+	u.Add(reply.FieldPoints, v)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Reply.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+//
+func (u *ReplyUpsertOne) UpdateNewValues() *ReplyUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(reply.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//  client.Reply.Create().
+//      OnConflict(sql.ResolveWithIgnore()).
+//      Exec(ctx)
+//
+func (u *ReplyUpsertOne) Ignore() *ReplyUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ReplyUpsertOne) DoNothing() *ReplyUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ReplyCreate.OnConflict
+// documentation for more info.
+func (u *ReplyUpsertOne) Update(set func(*ReplyUpsert)) *ReplyUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ReplyUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *ReplyUpsertOne) SetCreatedAt(v time.Time) *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *ReplyUpsertOne) UpdateCreatedAt() *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ReplyUpsertOne) SetUpdatedAt(v time.Time) *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ReplyUpsertOne) UpdateUpdatedAt() *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetContent sets the "content" field.
+func (u *ReplyUpsertOne) SetContent(v string) *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.SetContent(v)
+	})
+}
+
+// UpdateContent sets the "content" field to the value that was provided on create.
+func (u *ReplyUpsertOne) UpdateContent() *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.UpdateContent()
+	})
+}
+
+// SetPoints sets the "points" field.
+func (u *ReplyUpsertOne) SetPoints(v float32) *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.SetPoints(v)
+	})
+}
+
+// AddPoints adds v to the "points" field.
+func (u *ReplyUpsertOne) AddPoints(v float32) *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.AddPoints(v)
+	})
+}
+
+// UpdatePoints sets the "points" field to the value that was provided on create.
+func (u *ReplyUpsertOne) UpdatePoints() *ReplyUpsertOne {
+	return u.Update(func(s *ReplyUpsert) {
+		s.UpdatePoints()
+	})
+}
+
+// Exec executes the query.
+func (u *ReplyUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ReplyCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ReplyUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *ReplyUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *ReplyUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
 
 // ReplyCreateBulk is the builder for creating many Reply entities in bulk.
 type ReplyCreateBulk struct {
 	config
 	builders []*ReplyCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Reply entities in the database.
@@ -293,6 +540,7 @@ func (rcb *ReplyCreateBulk) Save(ctx context.Context) ([]*Reply, error) {
 					_, err = mutators[i+1].Mutate(root, rcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = rcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, rcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -343,6 +591,181 @@ func (rcb *ReplyCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (rcb *ReplyCreateBulk) ExecX(ctx context.Context) {
 	if err := rcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Reply.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ReplyUpsert) {
+//			SetCreatedAt(v+v).
+//		}).
+//		Exec(ctx)
+//
+func (rcb *ReplyCreateBulk) OnConflict(opts ...sql.ConflictOption) *ReplyUpsertBulk {
+	rcb.conflict = opts
+	return &ReplyUpsertBulk{
+		create: rcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Reply.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+//
+func (rcb *ReplyCreateBulk) OnConflictColumns(columns ...string) *ReplyUpsertBulk {
+	rcb.conflict = append(rcb.conflict, sql.ConflictColumns(columns...))
+	return &ReplyUpsertBulk{
+		create: rcb,
+	}
+}
+
+// ReplyUpsertBulk is the builder for "upsert"-ing
+// a bulk of Reply nodes.
+type ReplyUpsertBulk struct {
+	create *ReplyCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Reply.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+//
+func (u *ReplyUpsertBulk) UpdateNewValues() *ReplyUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(reply.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Reply.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+//
+func (u *ReplyUpsertBulk) Ignore() *ReplyUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ReplyUpsertBulk) DoNothing() *ReplyUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ReplyCreateBulk.OnConflict
+// documentation for more info.
+func (u *ReplyUpsertBulk) Update(set func(*ReplyUpsert)) *ReplyUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ReplyUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (u *ReplyUpsertBulk) SetCreatedAt(v time.Time) *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.SetCreatedAt(v)
+	})
+}
+
+// UpdateCreatedAt sets the "created_at" field to the value that was provided on create.
+func (u *ReplyUpsertBulk) UpdateCreatedAt() *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.UpdateCreatedAt()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *ReplyUpsertBulk) SetUpdatedAt(v time.Time) *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *ReplyUpsertBulk) UpdateUpdatedAt() *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetContent sets the "content" field.
+func (u *ReplyUpsertBulk) SetContent(v string) *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.SetContent(v)
+	})
+}
+
+// UpdateContent sets the "content" field to the value that was provided on create.
+func (u *ReplyUpsertBulk) UpdateContent() *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.UpdateContent()
+	})
+}
+
+// SetPoints sets the "points" field.
+func (u *ReplyUpsertBulk) SetPoints(v float32) *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.SetPoints(v)
+	})
+}
+
+// AddPoints adds v to the "points" field.
+func (u *ReplyUpsertBulk) AddPoints(v float32) *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.AddPoints(v)
+	})
+}
+
+// UpdatePoints sets the "points" field to the value that was provided on create.
+func (u *ReplyUpsertBulk) UpdatePoints() *ReplyUpsertBulk {
+	return u.Update(func(s *ReplyUpsert) {
+		s.UpdatePoints()
+	})
+}
+
+// Exec executes the query.
+func (u *ReplyUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ReplyCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ReplyCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ReplyUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/Faroukhamadi/likude/ent/community"
 	"github.com/Faroukhamadi/likude/ent/post"
 	"github.com/Faroukhamadi/likude/ent/reply"
-	"github.com/Faroukhamadi/likude/ent/subreply"
 	"github.com/Faroukhamadi/likude/ent/topic"
 	"github.com/Faroukhamadi/likude/ent/topicrelated"
 	"github.com/Faroukhamadi/likude/ent/user"
@@ -36,8 +35,6 @@ type Client struct {
 	Post *PostClient
 	// Reply is the client for interacting with the Reply builders.
 	Reply *ReplyClient
-	// Subreply is the client for interacting with the Subreply builders.
-	Subreply *SubreplyClient
 	// Topic is the client for interacting with the Topic builders.
 	Topic *TopicClient
 	// TopicRelated is the client for interacting with the TopicRelated builders.
@@ -63,7 +60,6 @@ func (c *Client) init() {
 	c.Community = NewCommunityClient(c.config)
 	c.Post = NewPostClient(c.config)
 	c.Reply = NewReplyClient(c.config)
-	c.Subreply = NewSubreplyClient(c.config)
 	c.Topic = NewTopicClient(c.config)
 	c.TopicRelated = NewTopicRelatedClient(c.config)
 	c.User = NewUserClient(c.config)
@@ -104,7 +100,6 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Community:    NewCommunityClient(cfg),
 		Post:         NewPostClient(cfg),
 		Reply:        NewReplyClient(cfg),
-		Subreply:     NewSubreplyClient(cfg),
 		Topic:        NewTopicClient(cfg),
 		TopicRelated: NewTopicRelatedClient(cfg),
 		User:         NewUserClient(cfg),
@@ -131,7 +126,6 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Community:    NewCommunityClient(cfg),
 		Post:         NewPostClient(cfg),
 		Reply:        NewReplyClient(cfg),
-		Subreply:     NewSubreplyClient(cfg),
 		Topic:        NewTopicClient(cfg),
 		TopicRelated: NewTopicRelatedClient(cfg),
 		User:         NewUserClient(cfg),
@@ -168,7 +162,6 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Community.Use(hooks...)
 	c.Post.Use(hooks...)
 	c.Reply.Use(hooks...)
-	c.Subreply.Use(hooks...)
 	c.Topic.Use(hooks...)
 	c.TopicRelated.Use(hooks...)
 	c.User.Use(hooks...)
@@ -267,7 +260,7 @@ func (c *CommentClient) QueryPost(co *Comment) *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(comment.Table, comment.FieldID, id),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, comment.PostTable, comment.PostColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, comment.PostTable, comment.PostPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(co.driver.Dialect(), step)
 		return fromV, nil
@@ -283,7 +276,7 @@ func (c *CommentClient) QueryReplies(co *Comment) *ReplyQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(comment.Table, comment.FieldID, id),
 			sqlgraph.To(reply.Table, reply.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, comment.RepliesTable, comment.RepliesColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, comment.RepliesTable, comment.RepliesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(co.driver.Dialect(), step)
 		return fromV, nil
@@ -495,7 +488,7 @@ func (c *PostClient) QueryWriter(po *Post) *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, post.WriterTable, post.WriterColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, post.WriterTable, post.WriterPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -511,7 +504,7 @@ func (c *PostClient) QueryComments(po *Post) *CommentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(comment.Table, comment.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, post.CommentsTable, post.CommentsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, post.CommentsTable, post.CommentsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -617,7 +610,7 @@ func (c *ReplyClient) QueryComment(r *Reply) *CommentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(reply.Table, reply.FieldID, id),
 			sqlgraph.To(comment.Table, comment.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, reply.CommentTable, reply.CommentColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, reply.CommentTable, reply.CommentPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
@@ -628,96 +621,6 @@ func (c *ReplyClient) QueryComment(r *Reply) *CommentQuery {
 // Hooks returns the client hooks.
 func (c *ReplyClient) Hooks() []Hook {
 	return c.hooks.Reply
-}
-
-// SubreplyClient is a client for the Subreply schema.
-type SubreplyClient struct {
-	config
-}
-
-// NewSubreplyClient returns a client for the Subreply from the given config.
-func NewSubreplyClient(c config) *SubreplyClient {
-	return &SubreplyClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `subreply.Hooks(f(g(h())))`.
-func (c *SubreplyClient) Use(hooks ...Hook) {
-	c.hooks.Subreply = append(c.hooks.Subreply, hooks...)
-}
-
-// Create returns a builder for creating a Subreply entity.
-func (c *SubreplyClient) Create() *SubreplyCreate {
-	mutation := newSubreplyMutation(c.config, OpCreate)
-	return &SubreplyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Subreply entities.
-func (c *SubreplyClient) CreateBulk(builders ...*SubreplyCreate) *SubreplyCreateBulk {
-	return &SubreplyCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Subreply.
-func (c *SubreplyClient) Update() *SubreplyUpdate {
-	mutation := newSubreplyMutation(c.config, OpUpdate)
-	return &SubreplyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *SubreplyClient) UpdateOne(s *Subreply) *SubreplyUpdateOne {
-	mutation := newSubreplyMutation(c.config, OpUpdateOne, withSubreply(s))
-	return &SubreplyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *SubreplyClient) UpdateOneID(id int) *SubreplyUpdateOne {
-	mutation := newSubreplyMutation(c.config, OpUpdateOne, withSubreplyID(id))
-	return &SubreplyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Subreply.
-func (c *SubreplyClient) Delete() *SubreplyDelete {
-	mutation := newSubreplyMutation(c.config, OpDelete)
-	return &SubreplyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *SubreplyClient) DeleteOne(s *Subreply) *SubreplyDeleteOne {
-	return c.DeleteOneID(s.ID)
-}
-
-// DeleteOne returns a builder for deleting the given entity by its id.
-func (c *SubreplyClient) DeleteOneID(id int) *SubreplyDeleteOne {
-	builder := c.Delete().Where(subreply.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &SubreplyDeleteOne{builder}
-}
-
-// Query returns a query builder for Subreply.
-func (c *SubreplyClient) Query() *SubreplyQuery {
-	return &SubreplyQuery{
-		config: c.config,
-	}
-}
-
-// Get returns a Subreply entity by its id.
-func (c *SubreplyClient) Get(ctx context.Context, id int) (*Subreply, error) {
-	return c.Query().Where(subreply.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *SubreplyClient) GetX(ctx context.Context, id int) *Subreply {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *SubreplyClient) Hooks() []Hook {
-	return c.hooks.Subreply
 }
 
 // TopicClient is a client for the Topic schema.
@@ -1057,7 +960,7 @@ func (c *UserClient) QueryPosts(u *User) *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, user.PostsTable, user.PostsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

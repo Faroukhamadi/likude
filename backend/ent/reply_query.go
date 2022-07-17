@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -26,7 +27,6 @@ type ReplyQuery struct {
 	predicates []predicate.Reply
 	// eager-loading edges.
 	withComment *CommentQuery
-	withFKs     bool
 	modifiers   []func(*sql.Selector)
 	loadTotal   []func(context.Context, []*Reply) error
 	// intermediate query (i.e. traversal path).
@@ -79,7 +79,7 @@ func (rq *ReplyQuery) QueryComment() *CommentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(reply.Table, reply.FieldID, selector),
 			sqlgraph.To(comment.Table, comment.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, reply.CommentTable, reply.CommentColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, reply.CommentTable, reply.CommentPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -356,18 +356,11 @@ func (rq *ReplyQuery) prepareQuery(ctx context.Context) error {
 func (rq *ReplyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Reply, error) {
 	var (
 		nodes       = []*Reply{}
-		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
 		loadedTypes = [1]bool{
 			rq.withComment != nil,
 		}
 	)
-	if rq.withComment != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, reply.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		return (*Reply).scanValues(nil, columns)
 	}
@@ -391,30 +384,54 @@ func (rq *ReplyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Reply,
 	}
 
 	if query := rq.withComment; query != nil {
-		ids := make([]int, 0, len(nodes))
-		nodeids := make(map[int][]*Reply)
-		for i := range nodes {
-			if nodes[i].comment_replies == nil {
-				continue
-			}
-			fk := *nodes[i].comment_replies
-			if _, ok := nodeids[fk]; !ok {
-				ids = append(ids, fk)
-			}
-			nodeids[fk] = append(nodeids[fk], nodes[i])
+		edgeids := make([]driver.Value, len(nodes))
+		byid := make(map[int]*Reply)
+		nids := make(map[int]map[*Reply]struct{})
+		for i, node := range nodes {
+			edgeids[i] = node.ID
+			byid[node.ID] = node
+			node.Edges.Comment = []*Comment{}
 		}
-		query.Where(comment.IDIn(ids...))
-		neighbors, err := query.All(ctx)
+		query.Where(func(s *sql.Selector) {
+			joinT := sql.Table(reply.CommentTable)
+			s.Join(joinT).On(s.C(comment.FieldID), joinT.C(reply.CommentPrimaryKey[0]))
+			s.Where(sql.InValues(joinT.C(reply.CommentPrimaryKey[1]), edgeids...))
+			columns := s.SelectedColumns()
+			s.Select(joinT.C(reply.CommentPrimaryKey[1]))
+			s.AppendSelect(columns...)
+			s.SetDistinct(false)
+		})
+		neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]interface{}, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]interface{}{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []interface{}) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Reply]struct{}{byid[outValue]: struct{}{}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byid[outValue]] = struct{}{}
+				return nil
+			}
+		})
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := nodeids[n.ID]
+			nodes, ok := nids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "comment_replies" returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected "comment" node returned %v`, n.ID)
 			}
-			for i := range nodes {
-				nodes[i].Edges.Comment = n
+			for kn := range nodes {
+				kn.Edges.Comment = append(kn.Edges.Comment, n)
 			}
 		}
 	}

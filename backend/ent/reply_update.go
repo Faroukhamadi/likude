@@ -54,23 +54,19 @@ func (ru *ReplyUpdate) AddPoints(f float32) *ReplyUpdate {
 	return ru
 }
 
-// SetCommentID sets the "comment" edge to the Comment entity by ID.
-func (ru *ReplyUpdate) SetCommentID(id int) *ReplyUpdate {
-	ru.mutation.SetCommentID(id)
+// AddCommentIDs adds the "comment" edge to the Comment entity by IDs.
+func (ru *ReplyUpdate) AddCommentIDs(ids ...int) *ReplyUpdate {
+	ru.mutation.AddCommentIDs(ids...)
 	return ru
 }
 
-// SetNillableCommentID sets the "comment" edge to the Comment entity by ID if the given value is not nil.
-func (ru *ReplyUpdate) SetNillableCommentID(id *int) *ReplyUpdate {
-	if id != nil {
-		ru = ru.SetCommentID(*id)
+// AddComment adds the "comment" edges to the Comment entity.
+func (ru *ReplyUpdate) AddComment(c ...*Comment) *ReplyUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return ru
-}
-
-// SetComment sets the "comment" edge to the Comment entity.
-func (ru *ReplyUpdate) SetComment(c *Comment) *ReplyUpdate {
-	return ru.SetCommentID(c.ID)
+	return ru.AddCommentIDs(ids...)
 }
 
 // Mutation returns the ReplyMutation object of the builder.
@@ -78,10 +74,25 @@ func (ru *ReplyUpdate) Mutation() *ReplyMutation {
 	return ru.mutation
 }
 
-// ClearComment clears the "comment" edge to the Comment entity.
+// ClearComment clears all "comment" edges to the Comment entity.
 func (ru *ReplyUpdate) ClearComment() *ReplyUpdate {
 	ru.mutation.ClearComment()
 	return ru
+}
+
+// RemoveCommentIDs removes the "comment" edge to Comment entities by IDs.
+func (ru *ReplyUpdate) RemoveCommentIDs(ids ...int) *ReplyUpdate {
+	ru.mutation.RemoveCommentIDs(ids...)
+	return ru
+}
+
+// RemoveComment removes "comment" edges to Comment entities.
+func (ru *ReplyUpdate) RemoveComment(c ...*Comment) *ReplyUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ru.RemoveCommentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -195,10 +206,10 @@ func (ru *ReplyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ru.mutation.CommentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   reply.CommentTable,
-			Columns: []string{reply.CommentColumn},
+			Columns: reply.CommentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -209,12 +220,31 @@ func (ru *ReplyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ru.mutation.CommentIDs(); len(nodes) > 0 {
+	if nodes := ru.mutation.RemovedCommentIDs(); len(nodes) > 0 && !ru.mutation.CommentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   reply.CommentTable,
-			Columns: []string{reply.CommentColumn},
+			Columns: reply.CommentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.CommentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   reply.CommentTable,
+			Columns: reply.CommentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -272,23 +302,19 @@ func (ruo *ReplyUpdateOne) AddPoints(f float32) *ReplyUpdateOne {
 	return ruo
 }
 
-// SetCommentID sets the "comment" edge to the Comment entity by ID.
-func (ruo *ReplyUpdateOne) SetCommentID(id int) *ReplyUpdateOne {
-	ruo.mutation.SetCommentID(id)
+// AddCommentIDs adds the "comment" edge to the Comment entity by IDs.
+func (ruo *ReplyUpdateOne) AddCommentIDs(ids ...int) *ReplyUpdateOne {
+	ruo.mutation.AddCommentIDs(ids...)
 	return ruo
 }
 
-// SetNillableCommentID sets the "comment" edge to the Comment entity by ID if the given value is not nil.
-func (ruo *ReplyUpdateOne) SetNillableCommentID(id *int) *ReplyUpdateOne {
-	if id != nil {
-		ruo = ruo.SetCommentID(*id)
+// AddComment adds the "comment" edges to the Comment entity.
+func (ruo *ReplyUpdateOne) AddComment(c ...*Comment) *ReplyUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return ruo
-}
-
-// SetComment sets the "comment" edge to the Comment entity.
-func (ruo *ReplyUpdateOne) SetComment(c *Comment) *ReplyUpdateOne {
-	return ruo.SetCommentID(c.ID)
+	return ruo.AddCommentIDs(ids...)
 }
 
 // Mutation returns the ReplyMutation object of the builder.
@@ -296,10 +322,25 @@ func (ruo *ReplyUpdateOne) Mutation() *ReplyMutation {
 	return ruo.mutation
 }
 
-// ClearComment clears the "comment" edge to the Comment entity.
+// ClearComment clears all "comment" edges to the Comment entity.
 func (ruo *ReplyUpdateOne) ClearComment() *ReplyUpdateOne {
 	ruo.mutation.ClearComment()
 	return ruo
+}
+
+// RemoveCommentIDs removes the "comment" edge to Comment entities by IDs.
+func (ruo *ReplyUpdateOne) RemoveCommentIDs(ids ...int) *ReplyUpdateOne {
+	ruo.mutation.RemoveCommentIDs(ids...)
+	return ruo
+}
+
+// RemoveComment removes "comment" edges to Comment entities.
+func (ruo *ReplyUpdateOne) RemoveComment(c ...*Comment) *ReplyUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ruo.RemoveCommentIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -443,10 +484,10 @@ func (ruo *ReplyUpdateOne) sqlSave(ctx context.Context) (_node *Reply, err error
 	}
 	if ruo.mutation.CommentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   reply.CommentTable,
-			Columns: []string{reply.CommentColumn},
+			Columns: reply.CommentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -457,12 +498,31 @@ func (ruo *ReplyUpdateOne) sqlSave(ctx context.Context) (_node *Reply, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ruo.mutation.CommentIDs(); len(nodes) > 0 {
+	if nodes := ruo.mutation.RemovedCommentIDs(); len(nodes) > 0 && !ruo.mutation.CommentCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   reply.CommentTable,
-			Columns: []string{reply.CommentColumn},
+			Columns: reply.CommentPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: comment.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.CommentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   reply.CommentTable,
+			Columns: reply.CommentPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

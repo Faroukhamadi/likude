@@ -18,9 +18,6 @@ type Post func(*sql.Selector)
 // Reply is the predicate function for reply builders.
 type Reply func(*sql.Selector)
 
-// Subreply is the predicate function for subreply builders.
-type Subreply func(*sql.Selector)
-
 // Topic is the predicate function for topic builders.
 type Topic func(*sql.Selector)
 

@@ -1,7 +1,11 @@
 package schema
 
 import (
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
+
+	"entgo.io/ent/schema"
+
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/Faroukhamadi/likude/ent/schema/mixin/timestamps"
@@ -38,5 +42,14 @@ func (User) Edges() []ent.Edge {
 		edge.To("posts", Post.Type),
 		edge.From("communities", Community.Type).
 			Ref("users"),
+	}
+}
+
+// Annotations of the User
+func (User) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entgql.RelayConnection(),
+		entgql.QueryField(),
+		entgql.Mutations(),
 	}
 }

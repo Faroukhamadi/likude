@@ -1,7 +1,9 @@
 package schema
 
 import (
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -30,5 +32,14 @@ func (TopicRelated) Edges() []ent.Edge {
 			Required().
 			Unique().
 			Field("related_topic_id"),
+	}
+}
+
+// Annotations of the User
+func (TopicRelated) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entgql.RelayConnection(),
+		entgql.QueryField(),
+		entgql.Mutations(),
 	}
 }

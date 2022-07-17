@@ -20,8 +20,6 @@ type Tx struct {
 	Post *PostClient
 	// Reply is the client for interacting with the Reply builders.
 	Reply *ReplyClient
-	// Subreply is the client for interacting with the Subreply builders.
-	Subreply *SubreplyClient
 	// Topic is the client for interacting with the Topic builders.
 	Topic *TopicClient
 	// TopicRelated is the client for interacting with the TopicRelated builders.
@@ -167,7 +165,6 @@ func (tx *Tx) init() {
 	tx.Community = NewCommunityClient(tx.config)
 	tx.Post = NewPostClient(tx.config)
 	tx.Reply = NewReplyClient(tx.config)
-	tx.Subreply = NewSubreplyClient(tx.config)
 	tx.Topic = NewTopicClient(tx.config)
 	tx.TopicRelated = NewTopicRelatedClient(tx.config)
 	tx.User = NewUserClient(tx.config)

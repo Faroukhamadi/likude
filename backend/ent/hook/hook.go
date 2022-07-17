@@ -61,19 +61,6 @@ func (f ReplyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return f(ctx, mv)
 }
 
-// The SubreplyFunc type is an adapter to allow the use of ordinary
-// function as Subreply mutator.
-type SubreplyFunc func(context.Context, *ent.SubreplyMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f SubreplyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.SubreplyMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubreplyMutation", m)
-	}
-	return f(ctx, mv)
-}
-
 // The TopicFunc type is an adapter to allow the use of ordinary
 // function as Topic mutator.
 type TopicFunc func(context.Context, *ent.TopicMutation) (ent.Value, error)

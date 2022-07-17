@@ -34,7 +34,6 @@ const (
 	TypeCommunity    = "Community"
 	TypePost         = "Post"
 	TypeReply        = "Reply"
-	TypeSubreply     = "Subreply"
 	TypeTopic        = "Topic"
 	TypeTopicRelated = "TopicRelated"
 	TypeUser         = "User"
@@ -52,7 +51,8 @@ type CommentMutation struct {
 	points         *float32
 	addpoints      *float32
 	clearedFields  map[string]struct{}
-	post           *int
+	post           map[int]struct{}
+	removedpost    map[int]struct{}
 	clearedpost    bool
 	replies        map[int]struct{}
 	removedreplies map[int]struct{}
@@ -324,9 +324,14 @@ func (m *CommentMutation) ResetPoints() {
 	m.addpoints = nil
 }
 
-// SetPostID sets the "post" edge to the Post entity by id.
-func (m *CommentMutation) SetPostID(id int) {
-	m.post = &id
+// AddPostIDs adds the "post" edge to the Post entity by ids.
+func (m *CommentMutation) AddPostIDs(ids ...int) {
+	if m.post == nil {
+		m.post = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.post[ids[i]] = struct{}{}
+	}
 }
 
 // ClearPost clears the "post" edge to the Post entity.
@@ -339,20 +344,29 @@ func (m *CommentMutation) PostCleared() bool {
 	return m.clearedpost
 }
 
-// PostID returns the "post" edge ID in the mutation.
-func (m *CommentMutation) PostID() (id int, exists bool) {
-	if m.post != nil {
-		return *m.post, true
+// RemovePostIDs removes the "post" edge to the Post entity by IDs.
+func (m *CommentMutation) RemovePostIDs(ids ...int) {
+	if m.removedpost == nil {
+		m.removedpost = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.post, ids[i])
+		m.removedpost[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPost returns the removed IDs of the "post" edge to the Post entity.
+func (m *CommentMutation) RemovedPostIDs() (ids []int) {
+	for id := range m.removedpost {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // PostIDs returns the "post" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// PostID instead. It exists only for internal usage by the builders.
 func (m *CommentMutation) PostIDs() (ids []int) {
-	if id := m.post; id != nil {
-		ids = append(ids, *id)
+	for id := range m.post {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -361,6 +375,7 @@ func (m *CommentMutation) PostIDs() (ids []int) {
 func (m *CommentMutation) ResetPost() {
 	m.post = nil
 	m.clearedpost = false
+	m.removedpost = nil
 }
 
 // AddReplyIDs adds the "replies" edge to the Reply entity by ids.
@@ -616,9 +631,11 @@ func (m *CommentMutation) AddedEdges() []string {
 func (m *CommentMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case comment.EdgePost:
-		if id := m.post; id != nil {
-			return []ent.Value{*id}
+		ids := make([]ent.Value, 0, len(m.post))
+		for id := range m.post {
+			ids = append(ids, id)
 		}
+		return ids
 	case comment.EdgeReplies:
 		ids := make([]ent.Value, 0, len(m.replies))
 		for id := range m.replies {
@@ -632,6 +649,9 @@ func (m *CommentMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CommentMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
+	if m.removedpost != nil {
+		edges = append(edges, comment.EdgePost)
+	}
 	if m.removedreplies != nil {
 		edges = append(edges, comment.EdgeReplies)
 	}
@@ -642,6 +662,12 @@ func (m *CommentMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *CommentMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case comment.EdgePost:
+		ids := make([]ent.Value, 0, len(m.removedpost))
+		for id := range m.removedpost {
+			ids = append(ids, id)
+		}
+		return ids
 	case comment.EdgeReplies:
 		ids := make([]ent.Value, 0, len(m.removedreplies))
 		for id := range m.removedreplies {
@@ -680,9 +706,6 @@ func (m *CommentMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *CommentMutation) ClearEdge(name string) error {
 	switch name {
-	case comment.EdgePost:
-		m.ClearPost()
-		return nil
 	}
 	return fmt.Errorf("unknown Comment unique edge %s", name)
 }
@@ -1277,10 +1300,11 @@ type PostMutation struct {
 	updated_at      *time.Time
 	title           *string
 	content         *string
-	points          *float32
-	addpoints       *float32
+	points          *float64
+	addpoints       *float64
 	clearedFields   map[string]struct{}
-	writer          *int
+	writer          map[int]struct{}
+	removedwriter   map[int]struct{}
 	clearedwriter   bool
 	comments        map[int]struct{}
 	removedcomments map[int]struct{}
@@ -1533,13 +1557,13 @@ func (m *PostMutation) ResetContent() {
 }
 
 // SetPoints sets the "points" field.
-func (m *PostMutation) SetPoints(f float32) {
+func (m *PostMutation) SetPoints(f float64) {
 	m.points = &f
 	m.addpoints = nil
 }
 
 // Points returns the value of the "points" field in the mutation.
-func (m *PostMutation) Points() (r float32, exists bool) {
+func (m *PostMutation) Points() (r float64, exists bool) {
 	v := m.points
 	if v == nil {
 		return
@@ -1550,7 +1574,7 @@ func (m *PostMutation) Points() (r float32, exists bool) {
 // OldPoints returns the old "points" field's value of the Post entity.
 // If the Post object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PostMutation) OldPoints(ctx context.Context) (v float32, err error) {
+func (m *PostMutation) OldPoints(ctx context.Context) (v float64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPoints is only allowed on UpdateOne operations")
 	}
@@ -1565,7 +1589,7 @@ func (m *PostMutation) OldPoints(ctx context.Context) (v float32, err error) {
 }
 
 // AddPoints adds f to the "points" field.
-func (m *PostMutation) AddPoints(f float32) {
+func (m *PostMutation) AddPoints(f float64) {
 	if m.addpoints != nil {
 		*m.addpoints += f
 	} else {
@@ -1574,7 +1598,7 @@ func (m *PostMutation) AddPoints(f float32) {
 }
 
 // AddedPoints returns the value that was added to the "points" field in this mutation.
-func (m *PostMutation) AddedPoints() (r float32, exists bool) {
+func (m *PostMutation) AddedPoints() (r float64, exists bool) {
 	v := m.addpoints
 	if v == nil {
 		return
@@ -1588,9 +1612,14 @@ func (m *PostMutation) ResetPoints() {
 	m.addpoints = nil
 }
 
-// SetWriterID sets the "writer" edge to the User entity by id.
-func (m *PostMutation) SetWriterID(id int) {
-	m.writer = &id
+// AddWriterIDs adds the "writer" edge to the User entity by ids.
+func (m *PostMutation) AddWriterIDs(ids ...int) {
+	if m.writer == nil {
+		m.writer = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.writer[ids[i]] = struct{}{}
+	}
 }
 
 // ClearWriter clears the "writer" edge to the User entity.
@@ -1603,20 +1632,29 @@ func (m *PostMutation) WriterCleared() bool {
 	return m.clearedwriter
 }
 
-// WriterID returns the "writer" edge ID in the mutation.
-func (m *PostMutation) WriterID() (id int, exists bool) {
-	if m.writer != nil {
-		return *m.writer, true
+// RemoveWriterIDs removes the "writer" edge to the User entity by IDs.
+func (m *PostMutation) RemoveWriterIDs(ids ...int) {
+	if m.removedwriter == nil {
+		m.removedwriter = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.writer, ids[i])
+		m.removedwriter[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedWriter returns the removed IDs of the "writer" edge to the User entity.
+func (m *PostMutation) RemovedWriterIDs() (ids []int) {
+	for id := range m.removedwriter {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // WriterIDs returns the "writer" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// WriterID instead. It exists only for internal usage by the builders.
 func (m *PostMutation) WriterIDs() (ids []int) {
-	if id := m.writer; id != nil {
-		ids = append(ids, *id)
+	for id := range m.writer {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -1625,6 +1663,7 @@ func (m *PostMutation) WriterIDs() (ids []int) {
 func (m *PostMutation) ResetWriter() {
 	m.writer = nil
 	m.clearedwriter = false
+	m.removedwriter = nil
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by ids.
@@ -1791,7 +1830,7 @@ func (m *PostMutation) SetField(name string, value ent.Value) error {
 		m.SetContent(v)
 		return nil
 	case post.FieldPoints:
-		v, ok := value.(float32)
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1828,7 +1867,7 @@ func (m *PostMutation) AddedField(name string) (ent.Value, bool) {
 func (m *PostMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case post.FieldPoints:
-		v, ok := value.(float32)
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1897,9 +1936,11 @@ func (m *PostMutation) AddedEdges() []string {
 func (m *PostMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case post.EdgeWriter:
-		if id := m.writer; id != nil {
-			return []ent.Value{*id}
+		ids := make([]ent.Value, 0, len(m.writer))
+		for id := range m.writer {
+			ids = append(ids, id)
 		}
+		return ids
 	case post.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.comments))
 		for id := range m.comments {
@@ -1913,6 +1954,9 @@ func (m *PostMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PostMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
+	if m.removedwriter != nil {
+		edges = append(edges, post.EdgeWriter)
+	}
 	if m.removedcomments != nil {
 		edges = append(edges, post.EdgeComments)
 	}
@@ -1923,6 +1967,12 @@ func (m *PostMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *PostMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case post.EdgeWriter:
+		ids := make([]ent.Value, 0, len(m.removedwriter))
+		for id := range m.removedwriter {
+			ids = append(ids, id)
+		}
+		return ids
 	case post.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.removedcomments))
 		for id := range m.removedcomments {
@@ -1961,9 +2011,6 @@ func (m *PostMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *PostMutation) ClearEdge(name string) error {
 	switch name {
-	case post.EdgeWriter:
-		m.ClearWriter()
-		return nil
 	}
 	return fmt.Errorf("unknown Post unique edge %s", name)
 }
@@ -1994,7 +2041,8 @@ type ReplyMutation struct {
 	points         *float32
 	addpoints      *float32
 	clearedFields  map[string]struct{}
-	comment        *int
+	comment        map[int]struct{}
+	removedcomment map[int]struct{}
 	clearedcomment bool
 	done           bool
 	oldValue       func(context.Context) (*Reply, error)
@@ -2263,9 +2311,14 @@ func (m *ReplyMutation) ResetPoints() {
 	m.addpoints = nil
 }
 
-// SetCommentID sets the "comment" edge to the Comment entity by id.
-func (m *ReplyMutation) SetCommentID(id int) {
-	m.comment = &id
+// AddCommentIDs adds the "comment" edge to the Comment entity by ids.
+func (m *ReplyMutation) AddCommentIDs(ids ...int) {
+	if m.comment == nil {
+		m.comment = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.comment[ids[i]] = struct{}{}
+	}
 }
 
 // ClearComment clears the "comment" edge to the Comment entity.
@@ -2278,20 +2331,29 @@ func (m *ReplyMutation) CommentCleared() bool {
 	return m.clearedcomment
 }
 
-// CommentID returns the "comment" edge ID in the mutation.
-func (m *ReplyMutation) CommentID() (id int, exists bool) {
-	if m.comment != nil {
-		return *m.comment, true
+// RemoveCommentIDs removes the "comment" edge to the Comment entity by IDs.
+func (m *ReplyMutation) RemoveCommentIDs(ids ...int) {
+	if m.removedcomment == nil {
+		m.removedcomment = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.comment, ids[i])
+		m.removedcomment[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedComment returns the removed IDs of the "comment" edge to the Comment entity.
+func (m *ReplyMutation) RemovedCommentIDs() (ids []int) {
+	for id := range m.removedcomment {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // CommentIDs returns the "comment" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// CommentID instead. It exists only for internal usage by the builders.
 func (m *ReplyMutation) CommentIDs() (ids []int) {
-	if id := m.comment; id != nil {
-		ids = append(ids, *id)
+	for id := range m.comment {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -2300,6 +2362,7 @@ func (m *ReplyMutation) CommentIDs() (ids []int) {
 func (m *ReplyMutation) ResetComment() {
 	m.comment = nil
 	m.clearedcomment = false
+	m.removedcomment = nil
 }
 
 // Where appends a list predicates to the ReplyMutation builder.
@@ -2498,9 +2561,11 @@ func (m *ReplyMutation) AddedEdges() []string {
 func (m *ReplyMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case reply.EdgeComment:
-		if id := m.comment; id != nil {
-			return []ent.Value{*id}
+		ids := make([]ent.Value, 0, len(m.comment))
+		for id := range m.comment {
+			ids = append(ids, id)
 		}
+		return ids
 	}
 	return nil
 }
@@ -2508,6 +2573,9 @@ func (m *ReplyMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ReplyMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
+	if m.removedcomment != nil {
+		edges = append(edges, reply.EdgeComment)
+	}
 	return edges
 }
 
@@ -2515,6 +2583,12 @@ func (m *ReplyMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *ReplyMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case reply.EdgeComment:
+		ids := make([]ent.Value, 0, len(m.removedcomment))
+		for id := range m.removedcomment {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
@@ -2542,9 +2616,6 @@ func (m *ReplyMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *ReplyMutation) ClearEdge(name string) error {
 	switch name {
-	case reply.EdgeComment:
-		m.ClearComment()
-		return nil
 	}
 	return fmt.Errorf("unknown Reply unique edge %s", name)
 }
@@ -2558,255 +2629,6 @@ func (m *ReplyMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Reply edge %s", name)
-}
-
-// SubreplyMutation represents an operation that mutates the Subreply nodes in the graph.
-type SubreplyMutation struct {
-	config
-	op            Op
-	typ           string
-	id            *int
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Subreply, error)
-	predicates    []predicate.Subreply
-}
-
-var _ ent.Mutation = (*SubreplyMutation)(nil)
-
-// subreplyOption allows management of the mutation configuration using functional options.
-type subreplyOption func(*SubreplyMutation)
-
-// newSubreplyMutation creates new mutation for the Subreply entity.
-func newSubreplyMutation(c config, op Op, opts ...subreplyOption) *SubreplyMutation {
-	m := &SubreplyMutation{
-		config:        c,
-		op:            op,
-		typ:           TypeSubreply,
-		clearedFields: make(map[string]struct{}),
-	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	return m
-}
-
-// withSubreplyID sets the ID field of the mutation.
-func withSubreplyID(id int) subreplyOption {
-	return func(m *SubreplyMutation) {
-		var (
-			err   error
-			once  sync.Once
-			value *Subreply
-		)
-		m.oldValue = func(ctx context.Context) (*Subreply, error) {
-			once.Do(func() {
-				if m.done {
-					err = errors.New("querying old values post mutation is not allowed")
-				} else {
-					value, err = m.Client().Subreply.Get(ctx, id)
-				}
-			})
-			return value, err
-		}
-		m.id = &id
-	}
-}
-
-// withSubreply sets the old Subreply of the mutation.
-func withSubreply(node *Subreply) subreplyOption {
-	return func(m *SubreplyMutation) {
-		m.oldValue = func(context.Context) (*Subreply, error) {
-			return node, nil
-		}
-		m.id = &node.ID
-	}
-}
-
-// Client returns a new `ent.Client` from the mutation. If the mutation was
-// executed in a transaction (ent.Tx), a transactional client is returned.
-func (m SubreplyMutation) Client() *Client {
-	client := &Client{config: m.config}
-	client.init()
-	return client
-}
-
-// Tx returns an `ent.Tx` for mutations that were executed in transactions;
-// it returns an error otherwise.
-func (m SubreplyMutation) Tx() (*Tx, error) {
-	if _, ok := m.driver.(*txDriver); !ok {
-		return nil, errors.New("ent: mutation is not running in a transaction")
-	}
-	tx := &Tx{config: m.config}
-	tx.init()
-	return tx, nil
-}
-
-// ID returns the ID value in the mutation. Note that the ID is only available
-// if it was provided to the builder or after it was returned from the database.
-func (m *SubreplyMutation) ID() (id int, exists bool) {
-	if m.id == nil {
-		return
-	}
-	return *m.id, true
-}
-
-// IDs queries the database and returns the entity ids that match the mutation's predicate.
-// That means, if the mutation is applied within a transaction with an isolation level such
-// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
-// or updated by the mutation.
-func (m *SubreplyMutation) IDs(ctx context.Context) ([]int, error) {
-	switch {
-	case m.op.Is(OpUpdateOne | OpDeleteOne):
-		id, exists := m.ID()
-		if exists {
-			return []int{id}, nil
-		}
-		fallthrough
-	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().Subreply.Query().Where(m.predicates...).IDs(ctx)
-	default:
-		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
-	}
-}
-
-// Where appends a list predicates to the SubreplyMutation builder.
-func (m *SubreplyMutation) Where(ps ...predicate.Subreply) {
-	m.predicates = append(m.predicates, ps...)
-}
-
-// Op returns the operation name.
-func (m *SubreplyMutation) Op() Op {
-	return m.op
-}
-
-// Type returns the node type of this mutation (Subreply).
-func (m *SubreplyMutation) Type() string {
-	return m.typ
-}
-
-// Fields returns all fields that were changed during this mutation. Note that in
-// order to get all numeric fields that were incremented/decremented, call
-// AddedFields().
-func (m *SubreplyMutation) Fields() []string {
-	fields := make([]string, 0, 0)
-	return fields
-}
-
-// Field returns the value of a field with the given name. The second boolean
-// return value indicates that this field was not set, or was not defined in the
-// schema.
-func (m *SubreplyMutation) Field(name string) (ent.Value, bool) {
-	return nil, false
-}
-
-// OldField returns the old value of the field from the database. An error is
-// returned if the mutation operation is not UpdateOne, or the query to the
-// database failed.
-func (m *SubreplyMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	return nil, fmt.Errorf("unknown Subreply field %s", name)
-}
-
-// SetField sets the value of a field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *SubreplyMutation) SetField(name string, value ent.Value) error {
-	switch name {
-	}
-	return fmt.Errorf("unknown Subreply field %s", name)
-}
-
-// AddedFields returns all numeric fields that were incremented/decremented during
-// this mutation.
-func (m *SubreplyMutation) AddedFields() []string {
-	return nil
-}
-
-// AddedField returns the numeric value that was incremented/decremented on a field
-// with the given name. The second boolean return value indicates that this field
-// was not set, or was not defined in the schema.
-func (m *SubreplyMutation) AddedField(name string) (ent.Value, bool) {
-	return nil, false
-}
-
-// AddField adds the value to the field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *SubreplyMutation) AddField(name string, value ent.Value) error {
-	return fmt.Errorf("unknown Subreply numeric field %s", name)
-}
-
-// ClearedFields returns all nullable fields that were cleared during this
-// mutation.
-func (m *SubreplyMutation) ClearedFields() []string {
-	return nil
-}
-
-// FieldCleared returns a boolean indicating if a field with the given name was
-// cleared in this mutation.
-func (m *SubreplyMutation) FieldCleared(name string) bool {
-	_, ok := m.clearedFields[name]
-	return ok
-}
-
-// ClearField clears the value of the field with the given name. It returns an
-// error if the field is not defined in the schema.
-func (m *SubreplyMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown Subreply nullable field %s", name)
-}
-
-// ResetField resets all changes in the mutation for the field with the given name.
-// It returns an error if the field is not defined in the schema.
-func (m *SubreplyMutation) ResetField(name string) error {
-	return fmt.Errorf("unknown Subreply field %s", name)
-}
-
-// AddedEdges returns all edge names that were set/added in this mutation.
-func (m *SubreplyMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// AddedIDs returns all IDs (to other nodes) that were added for the given edge
-// name in this mutation.
-func (m *SubreplyMutation) AddedIDs(name string) []ent.Value {
-	return nil
-}
-
-// RemovedEdges returns all edge names that were removed in this mutation.
-func (m *SubreplyMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
-// the given name in this mutation.
-func (m *SubreplyMutation) RemovedIDs(name string) []ent.Value {
-	return nil
-}
-
-// ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *SubreplyMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// EdgeCleared returns a boolean which indicates if the edge with the given name
-// was cleared in this mutation.
-func (m *SubreplyMutation) EdgeCleared(name string) bool {
-	return false
-}
-
-// ClearEdge clears the value of the edge with the given name. It returns an error
-// if that edge is not defined in the schema.
-func (m *SubreplyMutation) ClearEdge(name string) error {
-	return fmt.Errorf("unknown Subreply unique edge %s", name)
-}
-
-// ResetEdge resets all changes to the edge with the given name in this mutation.
-// It returns an error if the edge is not defined in the schema.
-func (m *SubreplyMutation) ResetEdge(name string) error {
-	return fmt.Errorf("unknown Subreply edge %s", name)
 }
 
 // TopicMutation represents an operation that mutates the Topic nodes in the graph.

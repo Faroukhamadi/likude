@@ -27,20 +27,16 @@ const (
 	EdgeComments = "comments"
 	// Table holds the table name of the post in the database.
 	Table = "posts"
-	// WriterTable is the table that holds the writer relation/edge.
-	WriterTable = "posts"
+	// WriterTable is the table that holds the writer relation/edge. The primary key declared below.
+	WriterTable = "user_posts"
 	// WriterInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	WriterInverseTable = "users"
-	// WriterColumn is the table column denoting the writer relation/edge.
-	WriterColumn = "user_posts"
-	// CommentsTable is the table that holds the comments relation/edge.
-	CommentsTable = "comments"
+	// CommentsTable is the table that holds the comments relation/edge. The primary key declared below.
+	CommentsTable = "post_comments"
 	// CommentsInverseTable is the table name for the Comment entity.
 	// It exists in this package in order to avoid circular dependency with the "comment" package.
 	CommentsInverseTable = "comments"
-	// CommentsColumn is the table column denoting the comments relation/edge.
-	CommentsColumn = "post_comments"
 )
 
 // Columns holds all SQL columns for post fields.
@@ -53,21 +49,19 @@ var Columns = []string{
 	FieldPoints,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "posts"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_posts",
-}
+var (
+	// WriterPrimaryKey and WriterColumn2 are the table columns denoting the
+	// primary key for the writer relation (M2M).
+	WriterPrimaryKey = []string{"user_id", "post_id"}
+	// CommentsPrimaryKey and CommentsColumn2 are the table columns denoting the
+	// primary key for the comments relation (M2M).
+	CommentsPrimaryKey = []string{"post_id", "comment_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}

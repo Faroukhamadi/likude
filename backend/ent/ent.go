@@ -14,7 +14,6 @@ import (
 	"github.com/Faroukhamadi/likude/ent/community"
 	"github.com/Faroukhamadi/likude/ent/post"
 	"github.com/Faroukhamadi/likude/ent/reply"
-	"github.com/Faroukhamadi/likude/ent/subreply"
 	"github.com/Faroukhamadi/likude/ent/topic"
 	"github.com/Faroukhamadi/likude/ent/topicrelated"
 	"github.com/Faroukhamadi/likude/ent/user"
@@ -42,7 +41,6 @@ func columnChecker(table string) func(string) error {
 		community.Table:    community.ValidColumn,
 		post.Table:         post.ValidColumn,
 		reply.Table:        reply.ValidColumn,
-		subreply.Table:     subreply.ValidColumn,
 		topic.Table:        topic.ValidColumn,
 		topicrelated.Table: topicrelated.ValidColumn,
 		user.Table:         user.ValidColumn,

@@ -28,7 +28,6 @@ type hooks struct {
 	Community    []ent.Hook
 	Post         []ent.Hook
 	Reply        []ent.Hook
-	Subreply     []ent.Hook
 	Topic        []ent.Hook
 	TopicRelated []ent.Hook
 	User         []ent.Hook

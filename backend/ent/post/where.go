@@ -110,7 +110,7 @@ func Content(v string) predicate.Post {
 }
 
 // Points applies equality check predicate on the "points" field. It's identical to PointsEQ.
-func Points(v float32) predicate.Post {
+func Points(v float64) predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPoints), v))
 	})
@@ -491,21 +491,21 @@ func ContentContainsFold(v string) predicate.Post {
 }
 
 // PointsEQ applies the EQ predicate on the "points" field.
-func PointsEQ(v float32) predicate.Post {
+func PointsEQ(v float64) predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPoints), v))
 	})
 }
 
 // PointsNEQ applies the NEQ predicate on the "points" field.
-func PointsNEQ(v float32) predicate.Post {
+func PointsNEQ(v float64) predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldPoints), v))
 	})
 }
 
 // PointsIn applies the In predicate on the "points" field.
-func PointsIn(vs ...float32) predicate.Post {
+func PointsIn(vs ...float64) predicate.Post {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -522,7 +522,7 @@ func PointsIn(vs ...float32) predicate.Post {
 }
 
 // PointsNotIn applies the NotIn predicate on the "points" field.
-func PointsNotIn(vs ...float32) predicate.Post {
+func PointsNotIn(vs ...float64) predicate.Post {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -539,28 +539,28 @@ func PointsNotIn(vs ...float32) predicate.Post {
 }
 
 // PointsGT applies the GT predicate on the "points" field.
-func PointsGT(v float32) predicate.Post {
+func PointsGT(v float64) predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldPoints), v))
 	})
 }
 
 // PointsGTE applies the GTE predicate on the "points" field.
-func PointsGTE(v float32) predicate.Post {
+func PointsGTE(v float64) predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldPoints), v))
 	})
 }
 
 // PointsLT applies the LT predicate on the "points" field.
-func PointsLT(v float32) predicate.Post {
+func PointsLT(v float64) predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldPoints), v))
 	})
 }
 
 // PointsLTE applies the LTE predicate on the "points" field.
-func PointsLTE(v float32) predicate.Post {
+func PointsLTE(v float64) predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldPoints), v))
 	})
@@ -572,7 +572,7 @@ func HasWriter() predicate.Post {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(WriterTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, WriterTable, WriterColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, WriterTable, WriterPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -584,7 +584,7 @@ func HasWriterWith(preds ...predicate.User) predicate.Post {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(WriterInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, WriterTable, WriterColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, WriterTable, WriterPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
@@ -600,7 +600,7 @@ func HasComments() predicate.Post {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(CommentsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CommentsTable, CommentsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, CommentsTable, CommentsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -612,7 +612,7 @@ func HasCommentsWith(preds ...predicate.Comment) predicate.Post {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(CommentsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, CommentsTable, CommentsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, CommentsTable, CommentsPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

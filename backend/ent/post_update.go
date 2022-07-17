@@ -49,35 +49,31 @@ func (pu *PostUpdate) SetContent(s string) *PostUpdate {
 }
 
 // SetPoints sets the "points" field.
-func (pu *PostUpdate) SetPoints(f float32) *PostUpdate {
+func (pu *PostUpdate) SetPoints(f float64) *PostUpdate {
 	pu.mutation.ResetPoints()
 	pu.mutation.SetPoints(f)
 	return pu
 }
 
 // AddPoints adds f to the "points" field.
-func (pu *PostUpdate) AddPoints(f float32) *PostUpdate {
+func (pu *PostUpdate) AddPoints(f float64) *PostUpdate {
 	pu.mutation.AddPoints(f)
 	return pu
 }
 
-// SetWriterID sets the "writer" edge to the User entity by ID.
-func (pu *PostUpdate) SetWriterID(id int) *PostUpdate {
-	pu.mutation.SetWriterID(id)
+// AddWriterIDs adds the "writer" edge to the User entity by IDs.
+func (pu *PostUpdate) AddWriterIDs(ids ...int) *PostUpdate {
+	pu.mutation.AddWriterIDs(ids...)
 	return pu
 }
 
-// SetNillableWriterID sets the "writer" edge to the User entity by ID if the given value is not nil.
-func (pu *PostUpdate) SetNillableWriterID(id *int) *PostUpdate {
-	if id != nil {
-		pu = pu.SetWriterID(*id)
+// AddWriter adds the "writer" edges to the User entity.
+func (pu *PostUpdate) AddWriter(u ...*User) *PostUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
 	}
-	return pu
-}
-
-// SetWriter sets the "writer" edge to the User entity.
-func (pu *PostUpdate) SetWriter(u *User) *PostUpdate {
-	return pu.SetWriterID(u.ID)
+	return pu.AddWriterIDs(ids...)
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
@@ -100,10 +96,25 @@ func (pu *PostUpdate) Mutation() *PostMutation {
 	return pu.mutation
 }
 
-// ClearWriter clears the "writer" edge to the User entity.
+// ClearWriter clears all "writer" edges to the User entity.
 func (pu *PostUpdate) ClearWriter() *PostUpdate {
 	pu.mutation.ClearWriter()
 	return pu
+}
+
+// RemoveWriterIDs removes the "writer" edge to User entities by IDs.
+func (pu *PostUpdate) RemoveWriterIDs(ids ...int) *PostUpdate {
+	pu.mutation.RemoveWriterIDs(ids...)
+	return pu
+}
+
+// RemoveWriter removes "writer" edges to User entities.
+func (pu *PostUpdate) RemoveWriter(u ...*User) *PostUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return pu.RemoveWriterIDs(ids...)
 }
 
 // ClearComments clears all "comments" edges to the Comment entity.
@@ -231,24 +242,24 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := pu.mutation.Points(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: post.FieldPoints,
 		})
 	}
 	if value, ok := pu.mutation.AddedPoints(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: post.FieldPoints,
 		})
 	}
 	if pu.mutation.WriterCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   post.WriterTable,
-			Columns: []string{post.WriterColumn},
+			Columns: post.WriterPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -259,12 +270,31 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.WriterIDs(); len(nodes) > 0 {
+	if nodes := pu.mutation.RemovedWriterIDs(); len(nodes) > 0 && !pu.mutation.WriterCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   post.WriterTable,
-			Columns: []string{post.WriterColumn},
+			Columns: post.WriterPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pu.mutation.WriterIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   post.WriterTable,
+			Columns: post.WriterPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -280,10 +310,10 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.CommentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   post.CommentsTable,
-			Columns: []string{post.CommentsColumn},
+			Columns: post.CommentsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -296,10 +326,10 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := pu.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !pu.mutation.CommentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   post.CommentsTable,
-			Columns: []string{post.CommentsColumn},
+			Columns: post.CommentsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -315,10 +345,10 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := pu.mutation.CommentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   post.CommentsTable,
-			Columns: []string{post.CommentsColumn},
+			Columns: post.CommentsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -370,35 +400,31 @@ func (puo *PostUpdateOne) SetContent(s string) *PostUpdateOne {
 }
 
 // SetPoints sets the "points" field.
-func (puo *PostUpdateOne) SetPoints(f float32) *PostUpdateOne {
+func (puo *PostUpdateOne) SetPoints(f float64) *PostUpdateOne {
 	puo.mutation.ResetPoints()
 	puo.mutation.SetPoints(f)
 	return puo
 }
 
 // AddPoints adds f to the "points" field.
-func (puo *PostUpdateOne) AddPoints(f float32) *PostUpdateOne {
+func (puo *PostUpdateOne) AddPoints(f float64) *PostUpdateOne {
 	puo.mutation.AddPoints(f)
 	return puo
 }
 
-// SetWriterID sets the "writer" edge to the User entity by ID.
-func (puo *PostUpdateOne) SetWriterID(id int) *PostUpdateOne {
-	puo.mutation.SetWriterID(id)
+// AddWriterIDs adds the "writer" edge to the User entity by IDs.
+func (puo *PostUpdateOne) AddWriterIDs(ids ...int) *PostUpdateOne {
+	puo.mutation.AddWriterIDs(ids...)
 	return puo
 }
 
-// SetNillableWriterID sets the "writer" edge to the User entity by ID if the given value is not nil.
-func (puo *PostUpdateOne) SetNillableWriterID(id *int) *PostUpdateOne {
-	if id != nil {
-		puo = puo.SetWriterID(*id)
+// AddWriter adds the "writer" edges to the User entity.
+func (puo *PostUpdateOne) AddWriter(u ...*User) *PostUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
 	}
-	return puo
-}
-
-// SetWriter sets the "writer" edge to the User entity.
-func (puo *PostUpdateOne) SetWriter(u *User) *PostUpdateOne {
-	return puo.SetWriterID(u.ID)
+	return puo.AddWriterIDs(ids...)
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
@@ -421,10 +447,25 @@ func (puo *PostUpdateOne) Mutation() *PostMutation {
 	return puo.mutation
 }
 
-// ClearWriter clears the "writer" edge to the User entity.
+// ClearWriter clears all "writer" edges to the User entity.
 func (puo *PostUpdateOne) ClearWriter() *PostUpdateOne {
 	puo.mutation.ClearWriter()
 	return puo
+}
+
+// RemoveWriterIDs removes the "writer" edge to User entities by IDs.
+func (puo *PostUpdateOne) RemoveWriterIDs(ids ...int) *PostUpdateOne {
+	puo.mutation.RemoveWriterIDs(ids...)
+	return puo
+}
+
+// RemoveWriter removes "writer" edges to User entities.
+func (puo *PostUpdateOne) RemoveWriter(u ...*User) *PostUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return puo.RemoveWriterIDs(ids...)
 }
 
 // ClearComments clears all "comments" edges to the Comment entity.
@@ -582,24 +623,24 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	}
 	if value, ok := puo.mutation.Points(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: post.FieldPoints,
 		})
 	}
 	if value, ok := puo.mutation.AddedPoints(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: post.FieldPoints,
 		})
 	}
 	if puo.mutation.WriterCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   post.WriterTable,
-			Columns: []string{post.WriterColumn},
+			Columns: post.WriterPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -610,12 +651,31 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.WriterIDs(); len(nodes) > 0 {
+	if nodes := puo.mutation.RemovedWriterIDs(); len(nodes) > 0 && !puo.mutation.WriterCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   post.WriterTable,
-			Columns: []string{post.WriterColumn},
+			Columns: post.WriterPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := puo.mutation.WriterIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   post.WriterTable,
+			Columns: post.WriterPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -631,10 +691,10 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	}
 	if puo.mutation.CommentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   post.CommentsTable,
-			Columns: []string{post.CommentsColumn},
+			Columns: post.CommentsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -647,10 +707,10 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	}
 	if nodes := puo.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !puo.mutation.CommentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   post.CommentsTable,
-			Columns: []string{post.CommentsColumn},
+			Columns: post.CommentsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -666,10 +726,10 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	}
 	if nodes := puo.mutation.CommentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   post.CommentsTable,
-			Columns: []string{post.CommentsColumn},
+			Columns: post.CommentsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{

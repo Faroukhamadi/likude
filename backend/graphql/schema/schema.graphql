@@ -1,14 +1,6 @@
 scalar Time
-
-interface Node {
-	id: ID!
-}
-
-type User implements Node {
-	id: ID!
-	username: String
-	password: String
-	karma: Int
-	createdAt: Time
-	updatedAt: Time
+type Mutation {
+	createUser(input: CreateUserInput!): User!
+	updateUser(id: ID!, input: UpdateUserInput!): User!
+	deleteUser(id: ID!): ID!
 }

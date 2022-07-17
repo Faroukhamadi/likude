@@ -9,7 +9,6 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/Faroukhamadi/likude/ent/post"
-	"github.com/Faroukhamadi/likude/ent/user"
 )
 
 // Post is the model entity for the Post schema.
@@ -26,17 +25,16 @@ type Post struct {
 	// Content holds the value of the "content" field.
 	Content string `json:"content,omitempty"`
 	// Points holds the value of the "points" field.
-	Points float32 `json:"points,omitempty"`
+	Points float64 `json:"points,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PostQuery when eager-loading is set.
-	Edges      PostEdges `json:"edges"`
-	user_posts *int
+	Edges PostEdges `json:"edges"`
 }
 
 // PostEdges holds the relations/edges for other nodes in the graph.
 type PostEdges struct {
 	// Writer holds the value of the writer edge.
-	Writer *User `json:"writer,omitempty"`
+	Writer []*User `json:"writer,omitempty"`
 	// Comments holds the value of the comments edge.
 	Comments []*Comment `json:"comments,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -47,14 +45,9 @@ type PostEdges struct {
 }
 
 // WriterOrErr returns the Writer value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e PostEdges) WriterOrErr() (*User, error) {
+// was not loaded in eager-loading.
+func (e PostEdges) WriterOrErr() ([]*User, error) {
 	if e.loadedTypes[0] {
-		if e.Writer == nil {
-			// The edge writer was loaded in eager-loading,
-			// but was not found.
-			return nil, &NotFoundError{label: user.Label}
-		}
 		return e.Writer, nil
 	}
 	return nil, &NotLoadedError{edge: "writer"}
@@ -82,8 +75,6 @@ func (*Post) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullString)
 		case post.FieldCreatedAt, post.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case post.ForeignKeys[0]: // user_posts
-			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Post", columns[i])
 		}
@@ -133,14 +124,7 @@ func (po *Post) assignValues(columns []string, values []interface{}) error {
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field points", values[i])
 			} else if value.Valid {
-				po.Points = float32(value.Float64)
-			}
-		case post.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field user_posts", value)
-			} else if value.Valid {
-				po.user_posts = new(int)
-				*po.user_posts = int(value.Int64)
+				po.Points = value.Float64
 			}
 		}
 	}
