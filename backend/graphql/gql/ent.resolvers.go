@@ -107,16 +107,6 @@ func (r *commentWhereInputResolver) PointsLte(ctx context.Context, obj *ent.Comm
 }
 
 // Points is the resolver for the points field.
-func (r *createCommentInputResolver) Points(ctx context.Context, obj *ent.CreateCommentInput, data float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// Points is the resolver for the points field.
-func (r *createReplyInputResolver) Points(ctx context.Context, obj *ent.CreateReplyInput, data float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// Points is the resolver for the points field.
 func (r *replyWhereInputResolver) Points(ctx context.Context, obj *ent.ReplyWhereInput, data *float64) error {
 	panic(fmt.Errorf("not implemented"))
 }
@@ -156,16 +146,6 @@ func (r *replyWhereInputResolver) PointsLte(ctx context.Context, obj *ent.ReplyW
 	panic(fmt.Errorf("not implemented"))
 }
 
-// Points is the resolver for the points field.
-func (r *updateCommentInputResolver) Points(ctx context.Context, obj *ent.UpdateCommentInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// Points is the resolver for the points field.
-func (r *updateReplyInputResolver) Points(ctx context.Context, obj *ent.UpdateReplyInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
 // Comment returns generated.CommentResolver implementation.
 func (r *Resolver) Comment() generated.CommentResolver { return &commentResolver{r} }
 
@@ -180,37 +160,13 @@ func (r *Resolver) CommentWhereInput() generated.CommentWhereInputResolver {
 	return &commentWhereInputResolver{r}
 }
 
-// CreateCommentInput returns generated.CreateCommentInputResolver implementation.
-func (r *Resolver) CreateCommentInput() generated.CreateCommentInputResolver {
-	return &createCommentInputResolver{r}
-}
-
-// CreateReplyInput returns generated.CreateReplyInputResolver implementation.
-func (r *Resolver) CreateReplyInput() generated.CreateReplyInputResolver {
-	return &createReplyInputResolver{r}
-}
-
 // ReplyWhereInput returns generated.ReplyWhereInputResolver implementation.
 func (r *Resolver) ReplyWhereInput() generated.ReplyWhereInputResolver {
 	return &replyWhereInputResolver{r}
-}
-
-// UpdateCommentInput returns generated.UpdateCommentInputResolver implementation.
-func (r *Resolver) UpdateCommentInput() generated.UpdateCommentInputResolver {
-	return &updateCommentInputResolver{r}
-}
-
-// UpdateReplyInput returns generated.UpdateReplyInputResolver implementation.
-func (r *Resolver) UpdateReplyInput() generated.UpdateReplyInputResolver {
-	return &updateReplyInputResolver{r}
 }
 
 type commentResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type replyResolver struct{ *Resolver }
 type commentWhereInputResolver struct{ *Resolver }
-type createCommentInputResolver struct{ *Resolver }
-type createReplyInputResolver struct{ *Resolver }
 type replyWhereInputResolver struct{ *Resolver }
-type updateCommentInputResolver struct{ *Resolver }
-type updateReplyInputResolver struct{ *Resolver }
