@@ -1,5 +1,15 @@
-# extend type Mutation {
-# 	createUser(input: CreateUserInput!): User!
-# 	updateUser(id: ID!, input: UpdateUserInput!): User!
-# 	deleteUser(id: ID!): ID!
-# }
+input CreateUserInput {
+	username: String
+	password: String
+}
+
+input UpdateUserInput {
+	password: String
+	karma: Int
+}
+
+extend type Mutation {
+	createUser(input: CreateUserInput!): User!
+	updateUser(id: ID!, input: UpdateUserInput!): User!
+	deleteUser(id: ID!): ID!
+}
