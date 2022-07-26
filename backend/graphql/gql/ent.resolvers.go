@@ -13,137 +13,58 @@ import (
 
 // Points is the resolver for the points field.
 func (r *commentResolver) Points(ctx context.Context, obj *ent.Comment) (float64, error) {
-	panic(fmt.Errorf("not implemented"))
+	panic(fmt.Errorf("points not implemented"))
 }
 
 // Node is the resolver for the node field.
 func (r *queryResolver) Node(ctx context.Context, id int) (ent.Noder, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.client.Noder(ctx, id)
 }
 
 // Nodes is the resolver for the nodes field.
 func (r *queryResolver) Nodes(ctx context.Context, ids []int) ([]ent.Noder, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.client.Noders(ctx, ids)
 }
 
 // Comments is the resolver for the comments field.
-func (r *queryResolver) Comments(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) (*ent.CommentConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Comments(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder) (*ent.CommentConnection, error) {
+	panic(fmt.Errorf("comments not implemented"))
 }
 
 // Communities is the resolver for the communities field.
-func (r *queryResolver) Communities(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommunityOrder, where *ent.CommunityWhereInput) (*ent.CommunityConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Communities(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommunityOrder) (*ent.CommunityConnection, error) {
+	panic(fmt.Errorf("communities not implemented"))
 }
 
 // Posts is the resolver for the posts field.
-func (r *queryResolver) Posts(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.PostOrder, where *ent.PostWhereInput) (*ent.PostConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Posts(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.PostOrder) (*ent.PostConnection, error) {
+	panic(fmt.Errorf("posts not implemented"))
 }
 
 // Replies is the resolver for the replies field.
-func (r *queryResolver) Replies(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ReplyOrder, where *ent.ReplyWhereInput) (*ent.ReplyConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Replies(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.ReplyOrder) (*ent.ReplyConnection, error) {
+	panic(fmt.Errorf("replies not implemented"))
 }
 
 // Topics is the resolver for the topics field.
-func (r *queryResolver) Topics(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.TopicWhereInput) (*ent.TopicConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Topics(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int) (*ent.TopicConnection, error) {
+	panic(fmt.Errorf("topics not implemented"))
 }
 
 // Topicrelateds is the resolver for the topicrelateds field.
-func (r *queryResolver) Topicrelateds(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.TopicRelatedWhereInput) (*ent.TopicRelatedConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Topicrelateds(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int) (*ent.TopicRelatedConnection, error) {
+	panic(fmt.Errorf("topicsRelated not implemented"))
 }
 
 // Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) (*ent.UserConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Users(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder) (*ent.UserConnection, error) {
+	return r.client.User.Query().
+		Paginate(ctx, after, first, before, last, ent.WithUserOrder(orderBy))
 }
 
 // Points is the resolver for the points field.
 func (r *replyResolver) Points(ctx context.Context, obj *ent.Reply) (float64, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// Points is the resolver for the points field.
-func (r *commentWhereInputResolver) Points(ctx context.Context, obj *ent.CommentWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsNeq is the resolver for the pointsNEQ field.
-func (r *commentWhereInputResolver) PointsNeq(ctx context.Context, obj *ent.CommentWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsIn is the resolver for the pointsIn field.
-func (r *commentWhereInputResolver) PointsIn(ctx context.Context, obj *ent.CommentWhereInput, data []float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsNotIn is the resolver for the pointsNotIn field.
-func (r *commentWhereInputResolver) PointsNotIn(ctx context.Context, obj *ent.CommentWhereInput, data []float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsGt is the resolver for the pointsGT field.
-func (r *commentWhereInputResolver) PointsGt(ctx context.Context, obj *ent.CommentWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsGte is the resolver for the pointsGTE field.
-func (r *commentWhereInputResolver) PointsGte(ctx context.Context, obj *ent.CommentWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsLt is the resolver for the pointsLT field.
-func (r *commentWhereInputResolver) PointsLt(ctx context.Context, obj *ent.CommentWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsLte is the resolver for the pointsLTE field.
-func (r *commentWhereInputResolver) PointsLte(ctx context.Context, obj *ent.CommentWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// Points is the resolver for the points field.
-func (r *replyWhereInputResolver) Points(ctx context.Context, obj *ent.ReplyWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsNeq is the resolver for the pointsNEQ field.
-func (r *replyWhereInputResolver) PointsNeq(ctx context.Context, obj *ent.ReplyWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsIn is the resolver for the pointsIn field.
-func (r *replyWhereInputResolver) PointsIn(ctx context.Context, obj *ent.ReplyWhereInput, data []float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsNotIn is the resolver for the pointsNotIn field.
-func (r *replyWhereInputResolver) PointsNotIn(ctx context.Context, obj *ent.ReplyWhereInput, data []float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsGt is the resolver for the pointsGT field.
-func (r *replyWhereInputResolver) PointsGt(ctx context.Context, obj *ent.ReplyWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsGte is the resolver for the pointsGTE field.
-func (r *replyWhereInputResolver) PointsGte(ctx context.Context, obj *ent.ReplyWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsLt is the resolver for the pointsLT field.
-func (r *replyWhereInputResolver) PointsLt(ctx context.Context, obj *ent.ReplyWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// PointsLte is the resolver for the pointsLTE field.
-func (r *replyWhereInputResolver) PointsLte(ctx context.Context, obj *ent.ReplyWhereInput, data *float64) error {
-	panic(fmt.Errorf("not implemented"))
+	panic(fmt.Errorf("points not implemented"))
 }
 
 // Comment returns generated.CommentResolver implementation.
@@ -155,18 +76,6 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 // Reply returns generated.ReplyResolver implementation.
 func (r *Resolver) Reply() generated.ReplyResolver { return &replyResolver{r} }
 
-// CommentWhereInput returns generated.CommentWhereInputResolver implementation.
-func (r *Resolver) CommentWhereInput() generated.CommentWhereInputResolver {
-	return &commentWhereInputResolver{r}
-}
-
-// ReplyWhereInput returns generated.ReplyWhereInputResolver implementation.
-func (r *Resolver) ReplyWhereInput() generated.ReplyWhereInputResolver {
-	return &replyWhereInputResolver{r}
-}
-
 type commentResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type replyResolver struct{ *Resolver }
-type commentWhereInputResolver struct{ *Resolver }
-type replyWhereInputResolver struct{ *Resolver }

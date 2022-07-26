@@ -49,11 +49,10 @@ func (po *Post) Comments(ctx context.Context) ([]*Comment, error) {
 }
 
 func (r *Reply) Comment(
-	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *CommentOrder, where *CommentWhereInput,
+	ctx context.Context, after *Cursor, first *int, before *Cursor, last *int, orderBy *CommentOrder,
 ) (*CommentConnection, error) {
 	opts := []CommentPaginateOption{
 		WithCommentOrder(orderBy),
-		WithCommentFilter(where.Filter),
 	}
 	totalCount := r.Edges.totalCount[0]
 	if nodes, err := r.Edges.CommentOrErr(); err == nil || totalCount != nil {

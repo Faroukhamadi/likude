@@ -2107,6 +2107,26 @@ var (
 			}
 		},
 	}
+	// UserOrderFieldUsername orders User by username.
+	UserOrderFieldUsername = &UserOrderField{
+		field: user.FieldUsername,
+		toCursor: func(u *User) Cursor {
+			return Cursor{
+				ID:    u.ID,
+				Value: u.Username,
+			}
+		},
+	}
+	// UserOrderFieldKarma orders User by karma.
+	UserOrderFieldKarma = &UserOrderField{
+		field: user.FieldKarma,
+		toCursor: func(u *User) Cursor {
+			return Cursor{
+				ID:    u.ID,
+				Value: u.Karma,
+			}
+		},
+	}
 )
 
 // String implement fmt.Stringer interface.
@@ -2117,6 +2137,10 @@ func (f UserOrderField) String() string {
 		str = "CREATED_AT"
 	case user.FieldUpdatedAt:
 		str = "UPDATED_AT"
+	case user.FieldUsername:
+		str = "USERNAME"
+	case user.FieldKarma:
+		str = "KARMA"
 	}
 	return str
 }
@@ -2137,6 +2161,10 @@ func (f *UserOrderField) UnmarshalGQL(v interface{}) error {
 		*f = *UserOrderFieldCreatedAt
 	case "UPDATED_AT":
 		*f = *UserOrderFieldUpdatedAt
+	case "USERNAME":
+		*f = *UserOrderFieldUsername
+	case "KARMA":
+		*f = *UserOrderFieldKarma
 	default:
 		return fmt.Errorf("%s is not a valid UserOrderField", str)
 	}

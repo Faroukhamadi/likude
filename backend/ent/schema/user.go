@@ -27,12 +27,18 @@ func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username").
 			Immutable().
-			Unique(),
+			Unique().
+			Annotations(
+				entgql.OrderField("USERNAME"),
+			),
 		field.String("password"),
 		field.Int("karma").
 			Default(0).
 			Nillable().
-			Optional(),
+			Optional().
+			Annotations(
+				entgql.OrderField("KARMA"),
+			),
 	}
 }
 

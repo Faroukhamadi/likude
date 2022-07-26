@@ -97,9 +97,6 @@ func newCommentPaginateArgs(rv map[string]interface{}) *commentPaginateArgs {
 			}
 		}
 	}
-	if v, ok := rv[whereField].(*CommentWhereInput); ok {
-		args.opts = append(args.opts, WithCommentFilter(v.Filter))
-	}
 	return args
 }
 
@@ -177,9 +174,6 @@ func newCommunityPaginateArgs(rv map[string]interface{}) *communityPaginateArgs 
 				args.opts = append(args.opts, WithCommunityOrder(v))
 			}
 		}
-	}
-	if v, ok := rv[whereField].(*CommunityWhereInput); ok {
-		args.opts = append(args.opts, WithCommunityFilter(v.Filter))
 	}
 	return args
 }
@@ -268,9 +262,6 @@ func newPostPaginateArgs(rv map[string]interface{}) *postPaginateArgs {
 			}
 		}
 	}
-	if v, ok := rv[whereField].(*PostWhereInput); ok {
-		args.opts = append(args.opts, WithPostFilter(v.Filter))
-	}
 	return args
 }
 
@@ -295,7 +286,7 @@ func (r *ReplyQuery) collectField(ctx context.Context, op *graphql.OperationCont
 				path  = append(path, field.Name)
 				query = &CommentQuery{config: r.config}
 			)
-			args := newCommentPaginateArgs(fieldArgs(ctx, new(CommentWhereInput), path...))
+			args := newCommentPaginateArgs(fieldArgs(ctx, nil, path...))
 			if err := validateFirstLast(args.first, args.last); err != nil {
 				return fmt.Errorf("validate first and last in path %q: %w", path, err)
 			}
@@ -445,9 +436,6 @@ func newReplyPaginateArgs(rv map[string]interface{}) *replyPaginateArgs {
 			}
 		}
 	}
-	if v, ok := rv[whereField].(*ReplyWhereInput); ok {
-		args.opts = append(args.opts, WithReplyFilter(v.Filter))
-	}
 	return args
 }
 
@@ -513,9 +501,6 @@ func newTopicPaginateArgs(rv map[string]interface{}) *topicPaginateArgs {
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
 	}
-	if v, ok := rv[whereField].(*TopicWhereInput); ok {
-		args.opts = append(args.opts, WithTopicFilter(v.Filter))
-	}
 	return args
 }
 
@@ -580,9 +565,6 @@ func newTopicRelatedPaginateArgs(rv map[string]interface{}) *topicrelatedPaginat
 	}
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
-	}
-	if v, ok := rv[whereField].(*TopicRelatedWhereInput); ok {
-		args.opts = append(args.opts, WithTopicRelatedFilter(v.Filter))
 	}
 	return args
 }
@@ -670,9 +652,6 @@ func newUserPaginateArgs(rv map[string]interface{}) *userPaginateArgs {
 				args.opts = append(args.opts, WithUserOrder(v))
 			}
 		}
-	}
-	if v, ok := rv[whereField].(*UserWhereInput); ok {
-		args.opts = append(args.opts, WithUserFilter(v.Filter))
 	}
 	return args
 }

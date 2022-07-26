@@ -25,8 +25,3 @@ models:
   Node:
     model:
       - github.com/Faroukhamadi/likude/ent.Noder
-
-  User:
-    fields:
-      karma:
-        resolver: false
