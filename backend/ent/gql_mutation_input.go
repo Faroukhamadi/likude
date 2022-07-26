@@ -11,7 +11,7 @@ type CreateCommentInput struct {
 	CreatedAt *time.Time
 	UpdatedAt *time.Time
 	Content   string
-	Points    float32
+	Points    float64
 	PostIDs   []int
 	ReplyIDs  []int
 }
@@ -44,7 +44,7 @@ func (c *CommentCreate) SetInput(i CreateCommentInput) *CommentCreate {
 type UpdateCommentInput struct {
 	UpdatedAt      *time.Time
 	Content        *string
-	Points         *float32
+	Points         *float64
 	AddPostIDs     []int
 	RemovePostIDs  []int
 	AddReplyIDs    []int
@@ -251,7 +251,7 @@ type CreateReplyInput struct {
 	CreatedAt  *time.Time
 	UpdatedAt  *time.Time
 	Content    string
-	Points     float32
+	Points     float64
 	CommentIDs []int
 }
 
@@ -280,7 +280,7 @@ func (c *ReplyCreate) SetInput(i CreateReplyInput) *ReplyCreate {
 type UpdateReplyInput struct {
 	UpdatedAt        *time.Time
 	Content          *string
-	Points           *float32
+	Points           *float64
 	AddCommentIDs    []int
 	RemoveCommentIDs []int
 }

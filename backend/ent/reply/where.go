@@ -103,7 +103,7 @@ func Content(v string) predicate.Reply {
 }
 
 // Points applies equality check predicate on the "points" field. It's identical to PointsEQ.
-func Points(v float32) predicate.Reply {
+func Points(v float64) predicate.Reply {
 	return predicate.Reply(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPoints), v))
 	})
@@ -373,21 +373,21 @@ func ContentContainsFold(v string) predicate.Reply {
 }
 
 // PointsEQ applies the EQ predicate on the "points" field.
-func PointsEQ(v float32) predicate.Reply {
+func PointsEQ(v float64) predicate.Reply {
 	return predicate.Reply(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldPoints), v))
 	})
 }
 
 // PointsNEQ applies the NEQ predicate on the "points" field.
-func PointsNEQ(v float32) predicate.Reply {
+func PointsNEQ(v float64) predicate.Reply {
 	return predicate.Reply(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldPoints), v))
 	})
 }
 
 // PointsIn applies the In predicate on the "points" field.
-func PointsIn(vs ...float32) predicate.Reply {
+func PointsIn(vs ...float64) predicate.Reply {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -404,7 +404,7 @@ func PointsIn(vs ...float32) predicate.Reply {
 }
 
 // PointsNotIn applies the NotIn predicate on the "points" field.
-func PointsNotIn(vs ...float32) predicate.Reply {
+func PointsNotIn(vs ...float64) predicate.Reply {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -421,28 +421,28 @@ func PointsNotIn(vs ...float32) predicate.Reply {
 }
 
 // PointsGT applies the GT predicate on the "points" field.
-func PointsGT(v float32) predicate.Reply {
+func PointsGT(v float64) predicate.Reply {
 	return predicate.Reply(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldPoints), v))
 	})
 }
 
 // PointsGTE applies the GTE predicate on the "points" field.
-func PointsGTE(v float32) predicate.Reply {
+func PointsGTE(v float64) predicate.Reply {
 	return predicate.Reply(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldPoints), v))
 	})
 }
 
 // PointsLT applies the LT predicate on the "points" field.
-func PointsLT(v float32) predicate.Reply {
+func PointsLT(v float64) predicate.Reply {
 	return predicate.Reply(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldPoints), v))
 	})
 }
 
 // PointsLTE applies the LTE predicate on the "points" field.
-func PointsLTE(v float32) predicate.Reply {
+func PointsLTE(v float64) predicate.Reply {
 	return predicate.Reply(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldPoints), v))
 	})

@@ -88,7 +88,7 @@ func (c *Comment) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Fields[3] = &Field{
-		Type:  "float32",
+		Type:  "float64",
 		Name:  "points",
 		Value: string(buf),
 	}
@@ -275,7 +275,7 @@ func (r *Reply) Node(ctx context.Context) (node *Node, err error) {
 		return nil, err
 	}
 	node.Fields[3] = &Field{
-		Type:  "float32",
+		Type:  "float64",
 		Name:  "points",
 		Value: string(buf),
 	}

@@ -58,7 +58,7 @@ func (rc *ReplyCreate) SetContent(s string) *ReplyCreate {
 }
 
 // SetPoints sets the "points" field.
-func (rc *ReplyCreate) SetPoints(f float32) *ReplyCreate {
+func (rc *ReplyCreate) SetPoints(f float64) *ReplyCreate {
 	rc.mutation.SetPoints(f)
 	return rc
 }
@@ -233,7 +233,7 @@ func (rc *ReplyCreate) createSpec() (*Reply, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := rc.mutation.Points(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: reply.FieldPoints,
 		})
@@ -349,7 +349,7 @@ func (u *ReplyUpsert) UpdateContent() *ReplyUpsert {
 }
 
 // SetPoints sets the "points" field.
-func (u *ReplyUpsert) SetPoints(v float32) *ReplyUpsert {
+func (u *ReplyUpsert) SetPoints(v float64) *ReplyUpsert {
 	u.Set(reply.FieldPoints, v)
 	return u
 }
@@ -361,7 +361,7 @@ func (u *ReplyUpsert) UpdatePoints() *ReplyUpsert {
 }
 
 // AddPoints adds v to the "points" field.
-func (u *ReplyUpsert) AddPoints(v float32) *ReplyUpsert {
+func (u *ReplyUpsert) AddPoints(v float64) *ReplyUpsert {
 	u.Add(reply.FieldPoints, v)
 	return u
 }
@@ -456,14 +456,14 @@ func (u *ReplyUpsertOne) UpdateContent() *ReplyUpsertOne {
 }
 
 // SetPoints sets the "points" field.
-func (u *ReplyUpsertOne) SetPoints(v float32) *ReplyUpsertOne {
+func (u *ReplyUpsertOne) SetPoints(v float64) *ReplyUpsertOne {
 	return u.Update(func(s *ReplyUpsert) {
 		s.SetPoints(v)
 	})
 }
 
 // AddPoints adds v to the "points" field.
-func (u *ReplyUpsertOne) AddPoints(v float32) *ReplyUpsertOne {
+func (u *ReplyUpsertOne) AddPoints(v float64) *ReplyUpsertOne {
 	return u.Update(func(s *ReplyUpsert) {
 		s.AddPoints(v)
 	})
@@ -730,14 +730,14 @@ func (u *ReplyUpsertBulk) UpdateContent() *ReplyUpsertBulk {
 }
 
 // SetPoints sets the "points" field.
-func (u *ReplyUpsertBulk) SetPoints(v float32) *ReplyUpsertBulk {
+func (u *ReplyUpsertBulk) SetPoints(v float64) *ReplyUpsertBulk {
 	return u.Update(func(s *ReplyUpsert) {
 		s.SetPoints(v)
 	})
 }
 
 // AddPoints adds v to the "points" field.
-func (u *ReplyUpsertBulk) AddPoints(v float32) *ReplyUpsertBulk {
+func (u *ReplyUpsertBulk) AddPoints(v float64) *ReplyUpsertBulk {
 	return u.Update(func(s *ReplyUpsert) {
 		s.AddPoints(v)
 	})

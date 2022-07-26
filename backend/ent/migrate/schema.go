@@ -14,7 +14,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "content", Type: field.TypeString},
-		{Name: "points", Type: field.TypeFloat32},
+		{Name: "points", Type: field.TypeFloat64},
 	}
 	// CommentsTable holds the schema information for the "comments" table.
 	CommentsTable = &schema.Table{
@@ -57,7 +57,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "content", Type: field.TypeString},
-		{Name: "points", Type: field.TypeFloat32},
+		{Name: "points", Type: field.TypeFloat64},
 	}
 	// RepliesTable holds the schema information for the "replies" table.
 	RepliesTable = &schema.Table{

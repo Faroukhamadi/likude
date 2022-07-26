@@ -24,7 +24,10 @@ func (Reply) Mixin() []ent.Mixin {
 func (Reply) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("content"),
-		field.Float32("points"),
+		field.Float("points").
+			Annotations(
+				entgql.OrderField("POINTS"),
+			),
 	}
 }
 
@@ -32,8 +35,7 @@ func (Reply) Fields() []ent.Field {
 func (Reply) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("comment", Comment.Type).
-			Ref("replies").
-			Annotations(entgql.RelayConnection()),
+			Ref("replies"),
 	}
 }
 

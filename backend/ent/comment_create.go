@@ -59,7 +59,7 @@ func (cc *CommentCreate) SetContent(s string) *CommentCreate {
 }
 
 // SetPoints sets the "points" field.
-func (cc *CommentCreate) SetPoints(f float32) *CommentCreate {
+func (cc *CommentCreate) SetPoints(f float64) *CommentCreate {
 	cc.mutation.SetPoints(f)
 	return cc
 }
@@ -249,7 +249,7 @@ func (cc *CommentCreate) createSpec() (*Comment, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := cc.mutation.Points(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: comment.FieldPoints,
 		})
@@ -384,7 +384,7 @@ func (u *CommentUpsert) UpdateContent() *CommentUpsert {
 }
 
 // SetPoints sets the "points" field.
-func (u *CommentUpsert) SetPoints(v float32) *CommentUpsert {
+func (u *CommentUpsert) SetPoints(v float64) *CommentUpsert {
 	u.Set(comment.FieldPoints, v)
 	return u
 }
@@ -396,7 +396,7 @@ func (u *CommentUpsert) UpdatePoints() *CommentUpsert {
 }
 
 // AddPoints adds v to the "points" field.
-func (u *CommentUpsert) AddPoints(v float32) *CommentUpsert {
+func (u *CommentUpsert) AddPoints(v float64) *CommentUpsert {
 	u.Add(comment.FieldPoints, v)
 	return u
 }
@@ -491,14 +491,14 @@ func (u *CommentUpsertOne) UpdateContent() *CommentUpsertOne {
 }
 
 // SetPoints sets the "points" field.
-func (u *CommentUpsertOne) SetPoints(v float32) *CommentUpsertOne {
+func (u *CommentUpsertOne) SetPoints(v float64) *CommentUpsertOne {
 	return u.Update(func(s *CommentUpsert) {
 		s.SetPoints(v)
 	})
 }
 
 // AddPoints adds v to the "points" field.
-func (u *CommentUpsertOne) AddPoints(v float32) *CommentUpsertOne {
+func (u *CommentUpsertOne) AddPoints(v float64) *CommentUpsertOne {
 	return u.Update(func(s *CommentUpsert) {
 		s.AddPoints(v)
 	})
@@ -765,14 +765,14 @@ func (u *CommentUpsertBulk) UpdateContent() *CommentUpsertBulk {
 }
 
 // SetPoints sets the "points" field.
-func (u *CommentUpsertBulk) SetPoints(v float32) *CommentUpsertBulk {
+func (u *CommentUpsertBulk) SetPoints(v float64) *CommentUpsertBulk {
 	return u.Update(func(s *CommentUpsert) {
 		s.SetPoints(v)
 	})
 }
 
 // AddPoints adds v to the "points" field.
-func (u *CommentUpsertBulk) AddPoints(v float32) *CommentUpsertBulk {
+func (u *CommentUpsertBulk) AddPoints(v float64) *CommentUpsertBulk {
 	return u.Update(func(s *CommentUpsert) {
 		s.AddPoints(v)
 	})

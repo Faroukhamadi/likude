@@ -70,14 +70,14 @@ type CommentWhereInput struct {
 	ContentContainsFold *string  `json:"contentContainsFold,omitempty"`
 
 	// "points" field predicates.
-	Points      *float32  `json:"points,omitempty"`
-	PointsNEQ   *float32  `json:"pointsNEQ,omitempty"`
-	PointsIn    []float32 `json:"pointsIn,omitempty"`
-	PointsNotIn []float32 `json:"pointsNotIn,omitempty"`
-	PointsGT    *float32  `json:"pointsGT,omitempty"`
-	PointsGTE   *float32  `json:"pointsGTE,omitempty"`
-	PointsLT    *float32  `json:"pointsLT,omitempty"`
-	PointsLTE   *float32  `json:"pointsLTE,omitempty"`
+	Points      *float64  `json:"points,omitempty"`
+	PointsNEQ   *float64  `json:"pointsNEQ,omitempty"`
+	PointsIn    []float64 `json:"pointsIn,omitempty"`
+	PointsNotIn []float64 `json:"pointsNotIn,omitempty"`
+	PointsGT    *float64  `json:"pointsGT,omitempty"`
+	PointsGTE   *float64  `json:"pointsGTE,omitempty"`
+	PointsLT    *float64  `json:"pointsLT,omitempty"`
+	PointsLTE   *float64  `json:"pointsLTE,omitempty"`
 
 	// "post" edge predicates.
 	HasPost     *bool             `json:"hasPost,omitempty"`
@@ -1094,14 +1094,14 @@ type ReplyWhereInput struct {
 	ContentContainsFold *string  `json:"contentContainsFold,omitempty"`
 
 	// "points" field predicates.
-	Points      *float32  `json:"points,omitempty"`
-	PointsNEQ   *float32  `json:"pointsNEQ,omitempty"`
-	PointsIn    []float32 `json:"pointsIn,omitempty"`
-	PointsNotIn []float32 `json:"pointsNotIn,omitempty"`
-	PointsGT    *float32  `json:"pointsGT,omitempty"`
-	PointsGTE   *float32  `json:"pointsGTE,omitempty"`
-	PointsLT    *float32  `json:"pointsLT,omitempty"`
-	PointsLTE   *float32  `json:"pointsLTE,omitempty"`
+	Points      *float64  `json:"points,omitempty"`
+	PointsNEQ   *float64  `json:"pointsNEQ,omitempty"`
+	PointsIn    []float64 `json:"pointsIn,omitempty"`
+	PointsNotIn []float64 `json:"pointsNotIn,omitempty"`
+	PointsGT    *float64  `json:"pointsGT,omitempty"`
+	PointsGTE   *float64  `json:"pointsGTE,omitempty"`
+	PointsLT    *float64  `json:"pointsLT,omitempty"`
+	PointsLTE   *float64  `json:"pointsLTE,omitempty"`
 
 	// "comment" edge predicates.
 	HasComment     *bool                `json:"hasComment,omitempty"`

@@ -35,7 +35,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			comment.FieldCreatedAt: {Type: field.TypeTime, Column: comment.FieldCreatedAt},
 			comment.FieldUpdatedAt: {Type: field.TypeTime, Column: comment.FieldUpdatedAt},
 			comment.FieldContent:   {Type: field.TypeString, Column: comment.FieldContent},
-			comment.FieldPoints:    {Type: field.TypeFloat32, Column: comment.FieldPoints},
+			comment.FieldPoints:    {Type: field.TypeFloat64, Column: comment.FieldPoints},
 		},
 	}
 	graph.Nodes[1] = &sqlgraph.Node{
@@ -87,7 +87,7 @@ var schemaGraph = func() *sqlgraph.Schema {
 			reply.FieldCreatedAt: {Type: field.TypeTime, Column: reply.FieldCreatedAt},
 			reply.FieldUpdatedAt: {Type: field.TypeTime, Column: reply.FieldUpdatedAt},
 			reply.FieldContent:   {Type: field.TypeString, Column: reply.FieldContent},
-			reply.FieldPoints:    {Type: field.TypeFloat32, Column: reply.FieldPoints},
+			reply.FieldPoints:    {Type: field.TypeFloat64, Column: reply.FieldPoints},
 		},
 	}
 	graph.Nodes[4] = &sqlgraph.Node{
@@ -345,8 +345,8 @@ func (f *CommentFilter) WhereContent(p entql.StringP) {
 	f.Where(p.Field(comment.FieldContent))
 }
 
-// WherePoints applies the entql float32 predicate on the points field.
-func (f *CommentFilter) WherePoints(p entql.Float32P) {
+// WherePoints applies the entql float64 predicate on the points field.
+func (f *CommentFilter) WherePoints(p entql.Float64P) {
 	f.Where(p.Field(comment.FieldPoints))
 }
 
@@ -600,8 +600,8 @@ func (f *ReplyFilter) WhereContent(p entql.StringP) {
 	f.Where(p.Field(reply.FieldContent))
 }
 
-// WherePoints applies the entql float32 predicate on the points field.
-func (f *ReplyFilter) WherePoints(p entql.Float32P) {
+// WherePoints applies the entql float64 predicate on the points field.
+func (f *ReplyFilter) WherePoints(p entql.Float64P) {
 	f.Where(p.Field(reply.FieldPoints))
 }
 

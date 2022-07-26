@@ -48,8 +48,8 @@ type CommentMutation struct {
 	created_at     *time.Time
 	updated_at     *time.Time
 	content        *string
-	points         *float32
-	addpoints      *float32
+	points         *float64
+	addpoints      *float64
 	clearedFields  map[string]struct{}
 	post           map[int]struct{}
 	removedpost    map[int]struct{}
@@ -269,13 +269,13 @@ func (m *CommentMutation) ResetContent() {
 }
 
 // SetPoints sets the "points" field.
-func (m *CommentMutation) SetPoints(f float32) {
+func (m *CommentMutation) SetPoints(f float64) {
 	m.points = &f
 	m.addpoints = nil
 }
 
 // Points returns the value of the "points" field in the mutation.
-func (m *CommentMutation) Points() (r float32, exists bool) {
+func (m *CommentMutation) Points() (r float64, exists bool) {
 	v := m.points
 	if v == nil {
 		return
@@ -286,7 +286,7 @@ func (m *CommentMutation) Points() (r float32, exists bool) {
 // OldPoints returns the old "points" field's value of the Comment entity.
 // If the Comment object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CommentMutation) OldPoints(ctx context.Context) (v float32, err error) {
+func (m *CommentMutation) OldPoints(ctx context.Context) (v float64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPoints is only allowed on UpdateOne operations")
 	}
@@ -301,7 +301,7 @@ func (m *CommentMutation) OldPoints(ctx context.Context) (v float32, err error) 
 }
 
 // AddPoints adds f to the "points" field.
-func (m *CommentMutation) AddPoints(f float32) {
+func (m *CommentMutation) AddPoints(f float64) {
 	if m.addpoints != nil {
 		*m.addpoints += f
 	} else {
@@ -310,7 +310,7 @@ func (m *CommentMutation) AddPoints(f float32) {
 }
 
 // AddedPoints returns the value that was added to the "points" field in this mutation.
-func (m *CommentMutation) AddedPoints() (r float32, exists bool) {
+func (m *CommentMutation) AddedPoints() (r float64, exists bool) {
 	v := m.addpoints
 	if v == nil {
 		return
@@ -528,7 +528,7 @@ func (m *CommentMutation) SetField(name string, value ent.Value) error {
 		m.SetContent(v)
 		return nil
 	case comment.FieldPoints:
-		v, ok := value.(float32)
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -565,7 +565,7 @@ func (m *CommentMutation) AddedField(name string) (ent.Value, bool) {
 func (m *CommentMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case comment.FieldPoints:
-		v, ok := value.(float32)
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -2038,8 +2038,8 @@ type ReplyMutation struct {
 	created_at     *time.Time
 	updated_at     *time.Time
 	content        *string
-	points         *float32
-	addpoints      *float32
+	points         *float64
+	addpoints      *float64
 	clearedFields  map[string]struct{}
 	comment        map[int]struct{}
 	removedcomment map[int]struct{}
@@ -2256,13 +2256,13 @@ func (m *ReplyMutation) ResetContent() {
 }
 
 // SetPoints sets the "points" field.
-func (m *ReplyMutation) SetPoints(f float32) {
+func (m *ReplyMutation) SetPoints(f float64) {
 	m.points = &f
 	m.addpoints = nil
 }
 
 // Points returns the value of the "points" field in the mutation.
-func (m *ReplyMutation) Points() (r float32, exists bool) {
+func (m *ReplyMutation) Points() (r float64, exists bool) {
 	v := m.points
 	if v == nil {
 		return
@@ -2273,7 +2273,7 @@ func (m *ReplyMutation) Points() (r float32, exists bool) {
 // OldPoints returns the old "points" field's value of the Reply entity.
 // If the Reply object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ReplyMutation) OldPoints(ctx context.Context) (v float32, err error) {
+func (m *ReplyMutation) OldPoints(ctx context.Context) (v float64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldPoints is only allowed on UpdateOne operations")
 	}
@@ -2288,7 +2288,7 @@ func (m *ReplyMutation) OldPoints(ctx context.Context) (v float32, err error) {
 }
 
 // AddPoints adds f to the "points" field.
-func (m *ReplyMutation) AddPoints(f float32) {
+func (m *ReplyMutation) AddPoints(f float64) {
 	if m.addpoints != nil {
 		*m.addpoints += f
 	} else {
@@ -2297,7 +2297,7 @@ func (m *ReplyMutation) AddPoints(f float32) {
 }
 
 // AddedPoints returns the value that was added to the "points" field in this mutation.
-func (m *ReplyMutation) AddedPoints() (r float32, exists bool) {
+func (m *ReplyMutation) AddedPoints() (r float64, exists bool) {
 	v := m.addpoints
 	if v == nil {
 		return
@@ -2461,7 +2461,7 @@ func (m *ReplyMutation) SetField(name string, value ent.Value) error {
 		m.SetContent(v)
 		return nil
 	case reply.FieldPoints:
-		v, ok := value.(float32)
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -2498,7 +2498,7 @@ func (m *ReplyMutation) AddedField(name string) (ent.Value, bool) {
 func (m *ReplyMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case reply.FieldPoints:
-		v, ok := value.(float32)
+		v, ok := value.(float64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

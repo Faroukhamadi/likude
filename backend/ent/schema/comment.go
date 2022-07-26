@@ -24,7 +24,10 @@ func (Comment) Mixin() []ent.Mixin {
 func (Comment) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("content"),
-		field.Float32("points"),
+		field.Float("points").
+			Annotations(
+				entgql.OrderField("POINTS"),
+			),
 	}
 }
 

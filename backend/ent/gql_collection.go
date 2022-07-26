@@ -4,13 +4,9 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
-	"fmt"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/Faroukhamadi/likude/ent/comment"
-	"github.com/Faroukhamadi/likude/ent/reply"
 )
 
 // CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
@@ -97,6 +93,9 @@ func newCommentPaginateArgs(rv map[string]interface{}) *commentPaginateArgs {
 			}
 		}
 	}
+	if v, ok := rv[whereField].(*CommentWhereInput); ok {
+		args.opts = append(args.opts, WithCommentFilter(v.Filter))
+	}
 	return args
 }
 
@@ -174,6 +173,9 @@ func newCommunityPaginateArgs(rv map[string]interface{}) *communityPaginateArgs 
 				args.opts = append(args.opts, WithCommunityOrder(v))
 			}
 		}
+	}
+	if v, ok := rv[whereField].(*CommunityWhereInput); ok {
+		args.opts = append(args.opts, WithCommunityFilter(v.Filter))
 	}
 	return args
 }
@@ -262,6 +264,9 @@ func newPostPaginateArgs(rv map[string]interface{}) *postPaginateArgs {
 			}
 		}
 	}
+	if v, ok := rv[whereField].(*PostWhereInput); ok {
+		args.opts = append(args.opts, WithPostFilter(v.Filter))
+	}
 	return args
 }
 
@@ -286,104 +291,8 @@ func (r *ReplyQuery) collectField(ctx context.Context, op *graphql.OperationCont
 				path  = append(path, field.Name)
 				query = &CommentQuery{config: r.config}
 			)
-			args := newCommentPaginateArgs(fieldArgs(ctx, nil, path...))
-			if err := validateFirstLast(args.first, args.last); err != nil {
-				return fmt.Errorf("validate first and last in path %q: %w", path, err)
-			}
-			pager, err := newCommentPager(args.opts)
-			if err != nil {
-				return fmt.Errorf("create new pager in path %q: %w", path, err)
-			}
-			if query, err = pager.applyFilter(query); err != nil {
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
 				return err
-			}
-			if !hasCollectedField(ctx, append(path, edgesField)...) || args.first != nil && *args.first == 0 || args.last != nil && *args.last == 0 {
-				if hasCollectedField(ctx, append(path, totalCountField)...) || hasCollectedField(ctx, append(path, pageInfoField)...) {
-					query := query.Clone()
-					r.loadTotal = append(r.loadTotal, func(ctx context.Context, nodes []*Reply) error {
-						ids := make([]driver.Value, len(nodes))
-						for i := range nodes {
-							ids[i] = nodes[i].ID
-						}
-						var v []struct {
-							NodeID int `sql:"reply_id"`
-							Count  int `sql:"count"`
-						}
-						query.Where(func(s *sql.Selector) {
-							joinT := sql.Table(reply.CommentTable)
-							s.Join(joinT).On(s.C(comment.FieldID), joinT.C(reply.CommentPrimaryKey[0]))
-							s.Where(sql.InValues(joinT.C(reply.CommentPrimaryKey[1]), ids...))
-							s.Select(joinT.C(reply.CommentPrimaryKey[1]), sql.Count("*"))
-							s.GroupBy(joinT.C(reply.CommentPrimaryKey[1]))
-						})
-						if err := query.Select().Scan(ctx, &v); err != nil {
-							return err
-						}
-						m := make(map[int]int, len(v))
-						for i := range v {
-							m[v[i].NodeID] = v[i].Count
-						}
-						for i := range nodes {
-							n := m[nodes[i].ID]
-							nodes[i].Edges.totalCount[0] = &n
-						}
-						return nil
-					})
-				}
-				continue
-			}
-			if (args.after != nil || args.first != nil || args.before != nil || args.last != nil) && hasCollectedField(ctx, append(path, totalCountField)...) {
-				query := query.Clone()
-				r.loadTotal = append(r.loadTotal, func(ctx context.Context, nodes []*Reply) error {
-					ids := make([]driver.Value, len(nodes))
-					for i := range nodes {
-						ids[i] = nodes[i].ID
-					}
-					var v []struct {
-						NodeID int `sql:"reply_id"`
-						Count  int `sql:"count"`
-					}
-					query.Where(func(s *sql.Selector) {
-						joinT := sql.Table(reply.CommentTable)
-						s.Join(joinT).On(s.C(comment.FieldID), joinT.C(reply.CommentPrimaryKey[0]))
-						s.Where(sql.InValues(joinT.C(reply.CommentPrimaryKey[1]), ids...))
-						s.Select(joinT.C(reply.CommentPrimaryKey[1]), sql.Count("*"))
-						s.GroupBy(joinT.C(reply.CommentPrimaryKey[1]))
-					})
-					if err := query.Select().Scan(ctx, &v); err != nil {
-						return err
-					}
-					m := make(map[int]int, len(v))
-					for i := range v {
-						m[v[i].NodeID] = v[i].Count
-					}
-					for i := range nodes {
-						n := m[nodes[i].ID]
-						nodes[i].Edges.totalCount[0] = &n
-					}
-					return nil
-				})
-			} else {
-				r.loadTotal = append(r.loadTotal, func(_ context.Context, nodes []*Reply) error {
-					for i := range nodes {
-						n := len(nodes[i].Edges.Comment)
-						nodes[i].Edges.totalCount[0] = &n
-					}
-					return nil
-				})
-			}
-			query = pager.applyCursors(query, args.after, args.before)
-			if limit := paginateLimit(args.first, args.last); limit > 0 {
-				modify := limitRows(reply.CommentPrimaryKey[1], limit, pager.orderExpr(args.last != nil))
-				query.modifiers = append(query.modifiers, modify)
-			} else {
-				query = pager.applyOrder(query, args.last != nil)
-			}
-			path = append(path, edgesField, nodeField)
-			if field := collectedField(ctx, path...); field != nil {
-				if err := query.collectField(ctx, op, *field, path, satisfies...); err != nil {
-					return err
-				}
 			}
 			r.withComment = query
 		}
@@ -435,6 +344,9 @@ func newReplyPaginateArgs(rv map[string]interface{}) *replyPaginateArgs {
 				args.opts = append(args.opts, WithReplyOrder(v))
 			}
 		}
+	}
+	if v, ok := rv[whereField].(*ReplyWhereInput); ok {
+		args.opts = append(args.opts, WithReplyFilter(v.Filter))
 	}
 	return args
 }
@@ -501,6 +413,9 @@ func newTopicPaginateArgs(rv map[string]interface{}) *topicPaginateArgs {
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
 	}
+	if v, ok := rv[whereField].(*TopicWhereInput); ok {
+		args.opts = append(args.opts, WithTopicFilter(v.Filter))
+	}
 	return args
 }
 
@@ -565,6 +480,9 @@ func newTopicRelatedPaginateArgs(rv map[string]interface{}) *topicrelatedPaginat
 	}
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[whereField].(*TopicRelatedWhereInput); ok {
+		args.opts = append(args.opts, WithTopicRelatedFilter(v.Filter))
 	}
 	return args
 }
@@ -652,6 +570,9 @@ func newUserPaginateArgs(rv map[string]interface{}) *userPaginateArgs {
 				args.opts = append(args.opts, WithUserOrder(v))
 			}
 		}
+	}
+	if v, ok := rv[whereField].(*UserWhereInput); ok {
+		args.opts = append(args.opts, WithUserFilter(v.Filter))
 	}
 	return args
 }

@@ -43,14 +43,14 @@ func (cu *CommentUpdate) SetContent(s string) *CommentUpdate {
 }
 
 // SetPoints sets the "points" field.
-func (cu *CommentUpdate) SetPoints(f float32) *CommentUpdate {
+func (cu *CommentUpdate) SetPoints(f float64) *CommentUpdate {
 	cu.mutation.ResetPoints()
 	cu.mutation.SetPoints(f)
 	return cu
 }
 
 // AddPoints adds f to the "points" field.
-func (cu *CommentUpdate) AddPoints(f float32) *CommentUpdate {
+func (cu *CommentUpdate) AddPoints(f float64) *CommentUpdate {
 	cu.mutation.AddPoints(f)
 	return cu
 }
@@ -229,14 +229,14 @@ func (cu *CommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := cu.mutation.Points(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: comment.FieldPoints,
 		})
 	}
 	if value, ok := cu.mutation.AddedPoints(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: comment.FieldPoints,
 		})
@@ -381,14 +381,14 @@ func (cuo *CommentUpdateOne) SetContent(s string) *CommentUpdateOne {
 }
 
 // SetPoints sets the "points" field.
-func (cuo *CommentUpdateOne) SetPoints(f float32) *CommentUpdateOne {
+func (cuo *CommentUpdateOne) SetPoints(f float64) *CommentUpdateOne {
 	cuo.mutation.ResetPoints()
 	cuo.mutation.SetPoints(f)
 	return cuo
 }
 
 // AddPoints adds f to the "points" field.
-func (cuo *CommentUpdateOne) AddPoints(f float32) *CommentUpdateOne {
+func (cuo *CommentUpdateOne) AddPoints(f float64) *CommentUpdateOne {
 	cuo.mutation.AddPoints(f)
 	return cuo
 }
@@ -597,14 +597,14 @@ func (cuo *CommentUpdateOne) sqlSave(ctx context.Context) (_node *Comment, err e
 	}
 	if value, ok := cuo.mutation.Points(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: comment.FieldPoints,
 		})
 	}
 	if value, ok := cuo.mutation.AddedPoints(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: comment.FieldPoints,
 		})

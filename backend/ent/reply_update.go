@@ -42,14 +42,14 @@ func (ru *ReplyUpdate) SetContent(s string) *ReplyUpdate {
 }
 
 // SetPoints sets the "points" field.
-func (ru *ReplyUpdate) SetPoints(f float32) *ReplyUpdate {
+func (ru *ReplyUpdate) SetPoints(f float64) *ReplyUpdate {
 	ru.mutation.ResetPoints()
 	ru.mutation.SetPoints(f)
 	return ru
 }
 
 // AddPoints adds f to the "points" field.
-func (ru *ReplyUpdate) AddPoints(f float32) *ReplyUpdate {
+func (ru *ReplyUpdate) AddPoints(f float64) *ReplyUpdate {
 	ru.mutation.AddPoints(f)
 	return ru
 }
@@ -192,14 +192,14 @@ func (ru *ReplyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := ru.mutation.Points(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: reply.FieldPoints,
 		})
 	}
 	if value, ok := ru.mutation.AddedPoints(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: reply.FieldPoints,
 		})
@@ -290,14 +290,14 @@ func (ruo *ReplyUpdateOne) SetContent(s string) *ReplyUpdateOne {
 }
 
 // SetPoints sets the "points" field.
-func (ruo *ReplyUpdateOne) SetPoints(f float32) *ReplyUpdateOne {
+func (ruo *ReplyUpdateOne) SetPoints(f float64) *ReplyUpdateOne {
 	ruo.mutation.ResetPoints()
 	ruo.mutation.SetPoints(f)
 	return ruo
 }
 
 // AddPoints adds f to the "points" field.
-func (ruo *ReplyUpdateOne) AddPoints(f float32) *ReplyUpdateOne {
+func (ruo *ReplyUpdateOne) AddPoints(f float64) *ReplyUpdateOne {
 	ruo.mutation.AddPoints(f)
 	return ruo
 }
@@ -470,14 +470,14 @@ func (ruo *ReplyUpdateOne) sqlSave(ctx context.Context) (_node *Reply, err error
 	}
 	if value, ok := ruo.mutation.Points(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: reply.FieldPoints,
 		})
 	}
 	if value, ok := ruo.mutation.AddedPoints(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat32,
+			Type:   field.TypeFloat64,
 			Value:  value,
 			Column: reply.FieldPoints,
 		})
