@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/Faroukhamadi/likude/ent"
-	"github.com/Faroukhamadi/likude/graphql/gql/generated"
 )
 
 // CreateUser is the resolver for the createUser field.
@@ -30,8 +29,3 @@ func (r *mutationResolver) UpdateUser(ctx context.Context, id int, input ent.Upd
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (int, error) {
 	return id, ent.FromContext(ctx).User.DeleteOneID(id).Exec(ctx)
 }
-
-// Mutation returns generated.MutationResolver implementation.
-func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }

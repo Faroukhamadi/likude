@@ -33,7 +33,8 @@ func (r *queryResolver) Communities(ctx context.Context, after *ent.Cursor, firs
 
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.PostOrder, where *ent.PostWhereInput) (*ent.PostConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.client.Post.Query().
+		Paginate(ctx, after, first, before, last, ent.WithPostOrder(orderBy))
 }
 
 // Replies is the resolver for the replies field.
