@@ -13,8 +13,10 @@ import (
 
 // CreatePost is the resolver for the createPost field.
 func (r *mutationResolver) CreatePost(ctx context.Context, input ent.CreatePostInput) (*ent.Post, error) {
-	panic(fmt.Errorf("not implemented"))
-
+	return ent.FromContext(ctx).Post.
+		Create().
+		SetInput(input).
+		Save(ctx)
 }
 
 // UpdatePost is the resolver for the updatePost field.

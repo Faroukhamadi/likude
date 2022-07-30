@@ -176,10 +176,10 @@ var schemaGraph = func() *sqlgraph.Schema {
 	graph.MustAddE(
 		"writer",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   post.WriterTable,
-			Columns: post.WriterPrimaryKey,
+			Columns: []string{post.WriterColumn},
 			Bidi:    false,
 		},
 		"Post",
@@ -260,10 +260,10 @@ var schemaGraph = func() *sqlgraph.Schema {
 	graph.MustAddE(
 		"posts",
 		&sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   user.PostsTable,
-			Columns: user.PostsPrimaryKey,
+			Columns: []string{user.PostsColumn},
 			Bidi:    false,
 		},
 		"User",

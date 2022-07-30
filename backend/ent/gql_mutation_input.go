@@ -165,7 +165,7 @@ type CreatePostInput struct {
 	Title      string
 	Content    string
 	Points     float64
-	WriterIDs  []int
+	WriterID  int
 	CommentIDs []int
 }
 
@@ -180,9 +180,7 @@ func (i *CreatePostInput) Mutate(m *PostMutation) {
 	m.SetTitle(i.Title)
 	m.SetContent(i.Content)
 	m.SetPoints(i.Points)
-	if v := i.WriterIDs; len(v) > 0 {
-		m.AddWriterIDs(v...)
-	}
+	m.SetWriterID(i.WriterID)
 	if v := i.CommentIDs; len(v) > 0 {
 		m.AddCommentIDs(v...)
 	}
@@ -219,12 +217,6 @@ func (i *UpdatePostInput) Mutate(m *PostMutation) {
 	}
 	if v := i.Points; v != nil {
 		m.SetPoints(*v)
-	}
-	if v := i.AddWriterIDs; len(v) > 0 {
-		m.AddWriterIDs(v...)
-	}
-	if v := i.RemoveWriterIDs; len(v) > 0 {
-		m.RemoveWriterIDs(v...)
 	}
 	if v := i.AddCommentIDs; len(v) > 0 {
 		m.AddCommentIDs(v...)

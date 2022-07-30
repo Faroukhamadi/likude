@@ -1303,8 +1303,7 @@ type PostMutation struct {
 	points          *float64
 	addpoints       *float64
 	clearedFields   map[string]struct{}
-	writer          map[int]struct{}
-	removedwriter   map[int]struct{}
+	writer          *int
 	clearedwriter   bool
 	comments        map[int]struct{}
 	removedcomments map[int]struct{}
@@ -1612,14 +1611,9 @@ func (m *PostMutation) ResetPoints() {
 	m.addpoints = nil
 }
 
-// AddWriterIDs adds the "writer" edge to the User entity by ids.
-func (m *PostMutation) AddWriterIDs(ids ...int) {
-	if m.writer == nil {
-		m.writer = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.writer[ids[i]] = struct{}{}
-	}
+// SetWriterID sets the "writer" edge to the User entity by id.
+func (m *PostMutation) SetWriterID(id int) {
+	m.writer = &id
 }
 
 // ClearWriter clears the "writer" edge to the User entity.
@@ -1632,29 +1626,20 @@ func (m *PostMutation) WriterCleared() bool {
 	return m.clearedwriter
 }
 
-// RemoveWriterIDs removes the "writer" edge to the User entity by IDs.
-func (m *PostMutation) RemoveWriterIDs(ids ...int) {
-	if m.removedwriter == nil {
-		m.removedwriter = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.writer, ids[i])
-		m.removedwriter[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedWriter returns the removed IDs of the "writer" edge to the User entity.
-func (m *PostMutation) RemovedWriterIDs() (ids []int) {
-	for id := range m.removedwriter {
-		ids = append(ids, id)
+// WriterID returns the "writer" edge ID in the mutation.
+func (m *PostMutation) WriterID() (id int, exists bool) {
+	if m.writer != nil {
+		return *m.writer, true
 	}
 	return
 }
 
 // WriterIDs returns the "writer" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// WriterID instead. It exists only for internal usage by the builders.
 func (m *PostMutation) WriterIDs() (ids []int) {
-	for id := range m.writer {
-		ids = append(ids, id)
+	if id := m.writer; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -1663,7 +1648,6 @@ func (m *PostMutation) WriterIDs() (ids []int) {
 func (m *PostMutation) ResetWriter() {
 	m.writer = nil
 	m.clearedwriter = false
-	m.removedwriter = nil
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by ids.
@@ -1936,11 +1920,9 @@ func (m *PostMutation) AddedEdges() []string {
 func (m *PostMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case post.EdgeWriter:
-		ids := make([]ent.Value, 0, len(m.writer))
-		for id := range m.writer {
-			ids = append(ids, id)
+		if id := m.writer; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case post.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.comments))
 		for id := range m.comments {
@@ -1954,9 +1936,6 @@ func (m *PostMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PostMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedwriter != nil {
-		edges = append(edges, post.EdgeWriter)
-	}
 	if m.removedcomments != nil {
 		edges = append(edges, post.EdgeComments)
 	}
@@ -1967,12 +1946,6 @@ func (m *PostMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *PostMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case post.EdgeWriter:
-		ids := make([]ent.Value, 0, len(m.removedwriter))
-		for id := range m.removedwriter {
-			ids = append(ids, id)
-		}
-		return ids
 	case post.EdgeComments:
 		ids := make([]ent.Value, 0, len(m.removedcomments))
 		for id := range m.removedcomments {
@@ -2011,6 +1984,9 @@ func (m *PostMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *PostMutation) ClearEdge(name string) error {
 	switch name {
+	case post.EdgeWriter:
+		m.ClearWriter()
+		return nil
 	}
 	return fmt.Errorf("unknown Post unique edge %s", name)
 }

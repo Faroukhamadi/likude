@@ -70,19 +70,23 @@ func (pc *PostCreate) SetPoints(f float64) *PostCreate {
 	return pc
 }
 
-// AddWriterIDs adds the "writer" edge to the User entity by IDs.
-func (pc *PostCreate) AddWriterIDs(ids ...int) *PostCreate {
-	pc.mutation.AddWriterIDs(ids...)
+// SetWriterID sets the "writer" edge to the User entity by ID.
+func (pc *PostCreate) SetWriterID(id int) *PostCreate {
+	pc.mutation.SetWriterID(id)
 	return pc
 }
 
-// AddWriter adds the "writer" edges to the User entity.
-func (pc *PostCreate) AddWriter(u ...*User) *PostCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+// SetNillableWriterID sets the "writer" edge to the User entity by ID if the given value is not nil.
+func (pc *PostCreate) SetNillableWriterID(id *int) *PostCreate {
+	if id != nil {
+		pc = pc.SetWriterID(*id)
 	}
-	return pc.AddWriterIDs(ids...)
+	return pc
+}
+
+// SetWriter sets the "writer" edge to the User entity.
+func (pc *PostCreate) SetWriter(u *User) *PostCreate {
+	return pc.SetWriterID(u.ID)
 }
 
 // AddCommentIDs adds the "comments" edge to the Comment entity by IDs.
@@ -274,10 +278,10 @@ func (pc *PostCreate) createSpec() (*Post, *sqlgraph.CreateSpec) {
 	}
 	if nodes := pc.mutation.WriterIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   post.WriterTable,
-			Columns: post.WriterPrimaryKey,
+			Columns: []string{post.WriterColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -289,6 +293,7 @@ func (pc *PostCreate) createSpec() (*Post, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.user_posts = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := pc.mutation.CommentsIDs(); len(nodes) > 0 {

@@ -1,7 +1,7 @@
 input CreatePostInput {
 	title: String
 	content: String
-	# writer: ID
+	WriterID: Int
 }
 
 input UpdatePostInput {

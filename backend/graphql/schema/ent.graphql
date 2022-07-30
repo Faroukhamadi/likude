@@ -247,7 +247,7 @@ type Post implements Node {
   title: String!
   content: String!
   points: Float!
-  writer: [User!]
+  writer: User
   comments: [Comment!]
 }
 """A connection to a list of items."""

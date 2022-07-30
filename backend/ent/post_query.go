@@ -29,6 +29,7 @@ type PostQuery struct {
 	// eager-loading edges.
 	withWriter   *UserQuery
 	withComments *CommentQuery
+	withFKs      bool
 	modifiers    []func(*sql.Selector)
 	loadTotal    []func(context.Context, []*Post) error
 	// intermediate query (i.e. traversal path).
@@ -81,7 +82,7 @@ func (pq *PostQuery) QueryWriter() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, post.WriterTable, post.WriterPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, post.WriterTable, post.WriterColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -392,12 +393,19 @@ func (pq *PostQuery) prepareQuery(ctx context.Context) error {
 func (pq *PostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Post, error) {
 	var (
 		nodes       = []*Post{}
+		withFKs     = pq.withFKs
 		_spec       = pq.querySpec()
 		loadedTypes = [2]bool{
 			pq.withWriter != nil,
 			pq.withComments != nil,
 		}
 	)
+	if pq.withWriter != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, post.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		return (*Post).scanValues(nil, columns)
 	}
@@ -421,54 +429,30 @@ func (pq *PostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Post, e
 	}
 
 	if query := pq.withWriter; query != nil {
-		edgeids := make([]driver.Value, len(nodes))
-		byid := make(map[int]*Post)
-		nids := make(map[int]map[*Post]struct{})
-		for i, node := range nodes {
-			edgeids[i] = node.ID
-			byid[node.ID] = node
-			node.Edges.Writer = []*User{}
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Post)
+		for i := range nodes {
+			if nodes[i].user_posts == nil {
+				continue
+			}
+			fk := *nodes[i].user_posts
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
 		}
-		query.Where(func(s *sql.Selector) {
-			joinT := sql.Table(post.WriterTable)
-			s.Join(joinT).On(s.C(user.FieldID), joinT.C(post.WriterPrimaryKey[0]))
-			s.Where(sql.InValues(joinT.C(post.WriterPrimaryKey[1]), edgeids...))
-			columns := s.SelectedColumns()
-			s.Select(joinT.C(post.WriterPrimaryKey[1]))
-			s.AppendSelect(columns...)
-			s.SetDistinct(false)
-		})
-		neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]interface{}, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]interface{}{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []interface{}) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Post]struct{}{byid[outValue]: struct{}{}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byid[outValue]] = struct{}{}
-				return nil
-			}
-		})
+		query.Where(user.IDIn(ids...))
+		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := nids[n.ID]
+			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "writer" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "user_posts" returned %v`, n.ID)
 			}
-			for kn := range nodes {
-				kn.Edges.Writer = append(kn.Edges.Writer, n)
+			for i := range nodes {
+				nodes[i].Edges.Writer = n
 			}
 		}
 	}

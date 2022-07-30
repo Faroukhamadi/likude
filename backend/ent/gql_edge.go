@@ -28,12 +28,12 @@ func (c *Community) Users(ctx context.Context) ([]*User, error) {
 	return result, err
 }
 
-func (po *Post) Writer(ctx context.Context) ([]*User, error) {
+func (po *Post) Writer(ctx context.Context) (*User, error) {
 	result, err := po.Edges.WriterOrErr()
 	if IsNotLoaded(err) {
-		result, err = po.QueryWriter().All(ctx)
+		result, err = po.QueryWriter().Only(ctx)
 	}
-	return result, err
+	return result, MaskNotFound(err)
 }
 
 func (po *Post) Comments(ctx context.Context) ([]*Comment, error) {

@@ -488,7 +488,7 @@ func (c *PostClient) QueryWriter(po *Post) *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, post.WriterTable, post.WriterPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, post.WriterTable, post.WriterColumn),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -960,7 +960,7 @@ func (c *UserClient) QueryPosts(u *User) *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.PostsTable, user.PostsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

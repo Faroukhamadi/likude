@@ -1345,7 +1345,7 @@ type Post implements Node {
   title: String!
   content: String!
   points: Float!
-  writer: [User!]
+  writer: User
   comments: [Comment!]
 }
 """A connection to a list of items."""
@@ -1919,7 +1919,7 @@ input UserWhereInput {
 	{Name: "../../schema/post.mutation.graphql", Input: `input CreatePostInput {
 	title: String
 	content: String
-	# writer: ID
+	WriterID: Int
 }
 
 input UpdatePostInput {
@@ -4513,9 +4513,9 @@ func (ec *executionContext) _Post_writer(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*ent.User)
+	res := resTmp.(*ent.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋFaroukhamadiᚋlikudeᚋentᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋFaroukhamadiᚋlikudeᚋentᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Post_writer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -10345,7 +10345,7 @@ func (ec *executionContext) unmarshalInputCreatePostInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"title", "content"}
+	fieldsInOrder := [...]string{"title", "content", "WriterID"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10365,6 +10365,14 @@ func (ec *executionContext) unmarshalInputCreatePostInput(ctx context.Context, o
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("content"))
 			it.Content, err = ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "WriterID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("WriterID"))
+			it.WriterID, err = ec.unmarshalOInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -15459,6 +15467,16 @@ func (ec *executionContext) marshalOID2ᚖint(ctx context.Context, sel ast.Selec
 		return graphql.Null
 	}
 	res := graphql.MarshalIntID(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
 	return res
 }
 

@@ -572,7 +572,7 @@ func HasWriter() predicate.Post {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(WriterTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, WriterTable, WriterPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, WriterTable, WriterColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -584,7 +584,7 @@ func HasWriterWith(preds ...predicate.User) predicate.Post {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(WriterInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, WriterTable, WriterPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, WriterTable, WriterColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
