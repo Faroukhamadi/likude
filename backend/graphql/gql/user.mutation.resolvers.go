@@ -5,12 +5,19 @@ package gql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Faroukhamadi/likude/ent"
+	"github.com/Faroukhamadi/likude/jwt"
 )
 
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
+	token, err := jwt.GenerateToken(input.Username)
+	if err != nil {
+		panic("token could not generated")
+	}
+	fmt.Println(token)
 	return ent.FromContext(ctx).User.
 		Create().
 		SetInput(input).

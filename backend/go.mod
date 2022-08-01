@@ -6,17 +6,17 @@ require (
 	entgo.io/contrib v0.3.0
 	entgo.io/ent v0.10.2-0.20220712151345-6c8a1308ec2d
 	github.com/99designs/gqlgen v0.17.12
-	github.com/gorilla/sessions v1.2.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-chi/chi/v5 v5.0.7
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/joho/godotenv v1.4.0
 	github.com/vektah/gqlparser/v2 v2.4.6
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.9
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/go-chi/chi/v5 v5.0.7 // indirect
-	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
@@ -26,9 +26,7 @@ require (
 	github.com/jackc/pgproto3/v2 v2.3.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.11.0 // indirect
-	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 )
 
 require (

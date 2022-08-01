@@ -25,6 +25,7 @@ func GenerateToken(username string) (string, error) {
 	return tokenString, nil
 }
 
+// returns the username and an error
 func ParseToken(tokenStr string) (string, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		return SecretKey, nil

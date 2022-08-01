@@ -28,7 +28,7 @@ func Middleware(client *ent.Client) func(http.Handler) http.Handler {
 				return
 			}
 
-			//validate   token
+			// validate token
 			tokenStr := header
 			username, err := jwt.ParseToken(tokenStr)
 			if err != nil {

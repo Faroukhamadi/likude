@@ -58,7 +58,7 @@ func main() {
 	)
 	router.Handle("/query", srv)
 	log.Println("listening on :4000")
-	if err := http.ListenAndServe(":4000", nil); err != nil {
+	if err := http.ListenAndServe(":4000", router); err != nil {
 		log.Fatal("http server terminated", err)
 	}
 }
