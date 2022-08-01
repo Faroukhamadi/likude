@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/Faroukhamadi/likude/ent"
-	"github.com/Faroukhamadi/likude/graphql/gql/generated"
 )
 
 // CreatePost is the resolver for the createPost field.
@@ -28,8 +27,3 @@ func (r *mutationResolver) UpdatePost(ctx context.Context, id int, input ent.Upd
 func (r *mutationResolver) DeletePost(ctx context.Context, id int) (int, error) {
 	panic(fmt.Errorf("not implemented"))
 }
-
-// Mutation returns generated.MutationResolver implementation.
-func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
-
-type mutationResolver struct{ *Resolver }
