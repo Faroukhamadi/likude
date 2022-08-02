@@ -6,3 +6,7 @@ type LoginInput struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+type RefreshTokenInput struct {
+	Token string `json:"Token"`
+}

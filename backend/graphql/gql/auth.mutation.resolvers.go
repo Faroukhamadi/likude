@@ -5,9 +5,9 @@ package gql
 
 import (
 	"context"
+	"fmt"
 	"log"
 
-	"github.com/Faroukhamadi/likude/ent"
 	"github.com/Faroukhamadi/likude/ent/user"
 	"github.com/Faroukhamadi/likude/graphql/gql/generated"
 	"github.com/Faroukhamadi/likude/graphql/gql/model"
@@ -15,38 +15,38 @@ import (
 )
 
 // Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*ent.User, error) {
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (string, error) {
 	user, err := r.client.User.Query().Where(user.Username(input.Username)).Only(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if user.Password == input.Password {
 		log.Println("password matches database")
+		token, err := jwt.GenerateToken(user.Username)
+		if err != nil {
+			return "", err
+		}
+		log.Println("this is the generated token", token)
+		return token, nil
 	} else {
-		log.Println("why the fuck doesnt password")
+		return "", fmt.Errorf("password does not match database")
 	}
-	token, err := jwt.GenerateToken(user.Username)
+}
+
+// RefreshToken is the resolver for the refreshToken field.
+func (r *mutationResolver) RefreshToken(ctx context.Context, input model.RefreshTokenInput) (string, error) {
+	username, err := jwt.ParseToken(input.Token)
 	if err != nil {
-		return nil, err
+		return "", fmt.Errorf("access denied")
 	}
-	log.Println("this is the generated token", token)
-	log.Println("this is the context value", ctx.Value(userCtxKey.name))
-	return user, nil
+	token, err := jwt.GenerateToken(username)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-var userCtxKey = &contextKey{"user"}
-
-type contextKey struct {
-	name string
-}

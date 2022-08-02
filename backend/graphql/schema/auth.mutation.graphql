@@ -3,6 +3,10 @@ input LoginInput {
 	password: String!
 }
 
+input RefreshTokenInput {
+	Token: String!
+}
 extend type Mutation {
-	login(input: LoginInput!): User!
+	login(input: LoginInput!): String!
+	refreshToken(input: RefreshTokenInput!): String!
 }
