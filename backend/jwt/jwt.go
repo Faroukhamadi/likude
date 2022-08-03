@@ -12,6 +12,7 @@ var (
 	SecretKey = []byte(helpers.GetEnv("SESSION_KEY"))
 )
 
+// takes a username string and returns the token string and an error
 func GenerateToken(username string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
@@ -25,7 +26,7 @@ func GenerateToken(username string) (string, error) {
 	return tokenString, nil
 }
 
-// returns the username and an error
+// takes a token string and returns the username and an error
 func ParseToken(tokenStr string) (string, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		return SecretKey, nil

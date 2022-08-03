@@ -13,6 +13,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v4/stdlib"
 
+	// "github.com/go-chi/cors"
+
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/Faroukhamadi/likude/auth"
 	"github.com/Faroukhamadi/likude/ent"
@@ -32,12 +34,21 @@ func Open(databaseUrl string) *ent.Client {
 }
 
 func main() {
-	router := chi.NewRouter()
+	r := chi.NewRouter()
 
 	client := Open("postgresql://postgres:faroukhamadi@127.0.0.1/likude")
 	defer client.Close()
 
-	router.Use(auth.Middleware(client))
+	r.Use(auth.Middleware(client))
+
+	// r.Use(cors.Handler(cors.Options{
+	// 	// AllowedOrigins:   []string{"http://localhost:3000"},
+	// 	AllowedOrigins:   []string{"*"},
+	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+	// 	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Access-Control-Allow-Origin"},
+	// 	ExposedHeaders:   []string{"Link"},
+	// 	AllowCredentials: true,
+	// }))
 
 	ctx := context.Background()
 	if err := client.Schema.Create(ctx, migrate.WithGlobalUniqueID(true)); err != nil {
@@ -53,12 +64,12 @@ func main() {
 	srv := handler.NewDefaultServer(gql.NewSchema(client))
 	srv.Use(entgql.Transactioner{TxOpener: client})
 
-	router.Handle("/",
+	r.Handle("/",
 		playground.Handler("Likude", "/query"),
 	)
-	router.Handle("/query", srv)
+	r.Handle("/query", srv)
 	log.Println("listening on :4000")
-	if err := http.ListenAndServe(":4000", router); err != nil {
+	if err := http.ListenAndServe(":4000", r); err != nil {
 		log.Fatal("http server terminated", err)
 	}
 }
