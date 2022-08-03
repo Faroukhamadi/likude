@@ -11,6 +11,7 @@ import (
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	_ "github.com/jackc/pgx/v4/stdlib"
 
 	// "github.com/go-chi/cors"
@@ -41,14 +42,14 @@ func main() {
 
 	r.Use(auth.Middleware(client))
 
-	// r.Use(cors.Handler(cors.Options{
-	// 	// AllowedOrigins:   []string{"http://localhost:3000"},
-	// 	AllowedOrigins:   []string{"*"},
-	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	// 	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Access-Control-Allow-Origin"},
-	// 	ExposedHeaders:   []string{"Link"},
-	// 	AllowCredentials: true,
-	// }))
+	r.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Access-Control-Allow-Origin"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+	}))
 
 	ctx := context.Background()
 	if err := client.Schema.Create(ctx, migrate.WithGlobalUniqueID(true)); err != nil {
