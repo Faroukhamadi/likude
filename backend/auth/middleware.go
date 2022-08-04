@@ -56,8 +56,7 @@ func Middleware(client *ent.Client) func(http.Handler) http.Handler {
 			// put it in context
 			ctx = context.WithValue(r.Context(), userCtxKey, &userInstance)
 			// print context value with userCtxKey as key
-			log.Println("this is the user in context AAAAAAAAAAAAAAA", ctx.Value(userCtxKey))
-
+			log.Println("this is the user in context", ctx.Value(userCtxKey))
 			log.Println("this is the user instance inside middleware", userInstance)
 
 			// and call the next with our new context
