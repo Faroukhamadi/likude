@@ -12,16 +12,20 @@ import (
 )
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (string, error) {
 	token, err := jwt.GenerateToken(input.Username)
 	if err != nil {
-		panic("token could not generated")
+		return "", fmt.Errorf("error generating token")
 	}
 	fmt.Println(token)
-	return ent.FromContext(ctx).User.
+	_, err = ent.FromContext(ctx).User.
 		Create().
 		SetInput(input).
 		Save(ctx)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 // UpdateUser is the resolver for the updateUser field.

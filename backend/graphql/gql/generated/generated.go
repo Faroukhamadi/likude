@@ -228,7 +228,7 @@ type MutationResolver interface {
 	CreatePost(ctx context.Context, input ent.CreatePostInput) (*ent.Post, error)
 	UpdatePost(ctx context.Context, id int, input ent.UpdatePostInput) (*ent.Post, error)
 	DeletePost(ctx context.Context, id int) (int, error)
-	CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error)
+	CreateUser(ctx context.Context, input ent.CreateUserInput) (string, error)
 	UpdateUser(ctx context.Context, id int, input ent.UpdateUserInput) (*ent.User, error)
 	DeleteUser(ctx context.Context, id int) (int, error)
 }
@@ -2027,7 +2027,7 @@ input UpdateUserInput {
 }
 
 extend type Mutation {
-	createUser(input: CreateUserInput!): User!
+	createUser(input: CreateUserInput!): String!
 	updateUser(id: ID!, input: UpdateUserInput!): User!
 	deleteUser(id: ID!): ID!
 }
@@ -4121,9 +4121,9 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*ent.User)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋFaroukhamadiᚋlikudeᚋentᚐUser(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4133,25 +4133,7 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_User_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_User_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_User_updatedAt(ctx, field)
-			case "username":
-				return ec.fieldContext_User_username(ctx, field)
-			case "password":
-				return ec.fieldContext_User_password(ctx, field)
-			case "karma":
-				return ec.fieldContext_User_karma(ctx, field)
-			case "posts":
-				return ec.fieldContext_User_posts(ctx, field)
-			case "communities":
-				return ec.fieldContext_User_communities(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {

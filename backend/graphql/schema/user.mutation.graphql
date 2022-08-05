@@ -9,7 +9,7 @@ input UpdateUserInput {
 }
 
 extend type Mutation {
-	createUser(input: CreateUserInput!): User!
+	createUser(input: CreateUserInput!): String!
 	updateUser(id: ID!, input: UpdateUserInput!): User!
 	deleteUser(id: ID!): ID!
 }

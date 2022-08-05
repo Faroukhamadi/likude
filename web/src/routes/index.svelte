@@ -2,7 +2,7 @@
 	import Navbar from '$lib/components/home/Navbar.svelte';
 	import Main from '$lib/components/home/main.svelte';
 	import { browser } from '$app/env';
-	import { GQL_Hello, GQL_Bye } from '$houdini';
+	import { GQL_Bye, GQL_Hello, GQL_Login } from '$houdini';
 
 	$: browser && GQL_Hello.fetch();
 	$: browser && GQL_Bye.fetch();

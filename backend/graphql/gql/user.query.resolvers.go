@@ -16,6 +16,7 @@ import (
 func (r *queryResolver) Me(ctx context.Context, tokenString string) (*ent.User, error) {
 	username, err := jwt.ParseToken(tokenString)
 	if err != nil {
+		log.Println("this is error", err)
 		return nil, err
 	}
 	log.Println("this is the username after parsing the token, how cool is this!!", username)

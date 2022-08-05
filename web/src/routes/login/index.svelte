@@ -1,9 +1,19 @@
 <script lang="ts">
 	import { createForm } from 'felte';
+	import { GQL_Login } from '$houdini';
 
 	const { form } = createForm({
-		onSubmit: async (values) => {
-			console.log('values: ', values);
+		onSubmit: async ({ username, password }) => {
+			console.log('this is the username and password: ', username, password);
+
+			await GQL_Login.mutate({
+				variables: {
+					input: {
+						username,
+						password
+					}
+				}
+			});
 		}
 	});
 </script>
@@ -31,3 +41,7 @@
 
 	<button class="btn">Login</button>
 </form>
+
+<pre>
+	{$GQL_Login.data?.login}
+</pre>

@@ -18,12 +18,13 @@ import (
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (string, error) {
 	user, err := r.client.User.Query().Where(user.Username(input.Username)).Only(ctx)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	if user.Password == input.Password {
 		log.Println("password matches database")
 		token, err := jwt.GenerateToken(user.Username)
 		if err != nil {
+			log.Println("error is different than nil")
 			return "", err
 		}
 		log.Println("this is the generated token", token)
