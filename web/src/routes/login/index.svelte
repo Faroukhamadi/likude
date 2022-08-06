@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { GQL_Login } from '$houdini';
+	import { getAccessToken, setAccessToken } from '../../accessToken';
 
 	const { form } = createForm({
 		onSubmit: async ({ username, password }) => {
-			console.log('this is the username and password: ', username, password);
-
 			await GQL_Login.mutate({
 				variables: {
 					input: {
@@ -14,6 +13,11 @@
 					}
 				}
 			});
+			setAccessToken($GQL_Login.data?.login);
+			console.log('this is the access token', getAccessToken());
+		},
+		onError: (error) => {
+			console.log('This is error', error);
 		}
 	});
 </script>

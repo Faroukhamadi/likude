@@ -18,7 +18,7 @@ import (
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (string, error) {
 	user, err := r.client.User.Query().Where(user.Username(input.Username)).Only(ctx)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("user not found")
 	}
 	if user.Password == input.Password {
 		log.Println("password matches database")
