@@ -1,3 +1,17 @@
+<script context="module">
+	import type { Load } from '@sveltejs/kit';
+
+	export const load: Load = async ({ session }) => {
+		if (session.user) {
+			return {
+				status: 302,
+				redirect: '/'
+			};
+		}
+		return {};
+	};
+</script>
+
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { GQL_Login } from '$houdini';
