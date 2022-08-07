@@ -1,4 +1,4 @@
-<script context="module">
+<script context="module" lang="ts">
 	import type { Load } from '@sveltejs/kit';
 
 	export const load: Load = async ({ session }) => {
@@ -15,7 +15,6 @@
 <script lang="ts">
 	import { createForm } from 'felte';
 	import { GQL_Login } from '$houdini';
-	import { getAccessToken, setAccessToken } from '../../accessToken';
 
 	const { form } = createForm({
 		onSubmit: async ({ username, password }) => {
@@ -27,8 +26,9 @@
 					}
 				}
 			});
-			setAccessToken($GQL_Login.data?.login);
-			console.log('this is the access token', getAccessToken());
+		},
+		onSuccess: async () => {
+			localStorage.setItem('sid', $GQL_Login.data?.login!);
 		},
 		onError: (error) => {
 			console.log('This is error', error);

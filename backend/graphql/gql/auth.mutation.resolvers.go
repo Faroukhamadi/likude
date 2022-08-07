@@ -30,7 +30,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (s
 		log.Println("this is the generated token", token)
 		return token, nil
 	} else {
-		return "", fmt.Errorf("password does not match database")
+		return "", fmt.Errorf("incorrect password")
 	}
 }
 
