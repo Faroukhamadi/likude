@@ -7,11 +7,15 @@ async function fetchQuery({
 	session,
 	metadata
 }: RequestHandlerArgs) {
+	let val = localStorage.getItem('sid') ? `Bearer ${localStorage.getItem('sid')}` : '';
+	console.log(val);
+
 	const url = import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:4000/query';
 	const result = await fetch(url, {
 		method: 'POST',
 		headers: {
-			'Content-Type': 'application/json'
+			'Content-Type': 'application/json',
+			Authorization: localStorage.getItem('sid') ? `Bearer ${localStorage.getItem('sid')}` : ''
 		},
 		body: JSON.stringify({
 			query: text,

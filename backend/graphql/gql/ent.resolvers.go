@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Faroukhamadi/likude/auth"
 	"github.com/Faroukhamadi/likude/ent"
 	"github.com/Faroukhamadi/likude/graphql/gql/generated"
 )
@@ -54,6 +55,8 @@ func (r *queryResolver) Topicrelateds(ctx context.Context, after *ent.Cursor, fi
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) (*ent.UserConnection, error) {
+	// fmt.Println("user context value: ", ctx.Value(&auth.ContextKey{  }))
+	fmt.Println("user context value: ", auth.ForContext(ctx))
 	return r.client.User.Query().
 		Paginate(ctx, after, first, before, last, ent.WithUserOrder(orderBy))
 }
