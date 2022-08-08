@@ -13,6 +13,7 @@
         "lint": "prettier --check --plugin-search-dir=. . && eslint .",
         "format": "prettier --write --plugin-search-dir=. .",
         "generate": "houdini generate",
+        "generate-flag": "houdini generate -p",
         "gen": "graphql-codegen --config ./.graphqlrc.yaml"
     },
     "devDependencies": {
