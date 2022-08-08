@@ -5,21 +5,15 @@ package gql
 
 import (
 	"context"
-	"log"
 
+	"github.com/Faroukhamadi/likude/auth"
 	"github.com/Faroukhamadi/likude/ent"
-	"github.com/Faroukhamadi/likude/ent/user"
-	"github.com/Faroukhamadi/likude/jwt"
 )
 
 // Me is the resolver for the me field.
-func (r *queryResolver) Me(ctx context.Context, tokenString string) (*ent.User, error) {
-	username, err := jwt.ParseToken(tokenString)
-	if err != nil {
-		log.Println("this is error", err)
-		return nil, err
+func (r *queryResolver) Me(ctx context.Context) (*ent.User, error) {
+	if auth.ForContext(ctx) != nil {
+		return r.client.User.Get(ctx, auth.ForContext(ctx).ID)
 	}
-	log.Println("this is the username after parsing the token, how cool is this!!", username)
-	user, err := r.client.User.Query().Where(user.Username(username)).Only(ctx)
-	return user, err
+	return nil, auth.ErrNotAuthenticated
 }

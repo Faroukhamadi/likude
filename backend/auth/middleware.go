@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/Faroukhamadi/likude/ent"
@@ -12,6 +12,8 @@ import (
 	"github.com/Faroukhamadi/likude/helpers"
 	"github.com/Faroukhamadi/likude/jwt"
 )
+
+var ErrNotAuthenticated = fmt.Errorf("not authenticated")
 
 var userCtxKey = &contextKey{"user"}
 
@@ -24,7 +26,7 @@ func Middleware(client *ent.Client) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			header := r.Header.Get("Authorization")
 			// remove this later
-			header = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTk5Nzk3MzUsInVzZXJuYW1lIjoibmV3dXNlcjEifQ.Dc6wGpf4u7TFNwEhRBIWyDV2SF5OGMLAvQBbtG6DDjI"
+			// header = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NTk5Nzk3MzUsInVzZXJuYW1lIjoibmV3dXNlcjEifQ.Dc6wGpf4u7TFNwEhRBIWyDV2SF5OGMLAvQBbtG6DDjI"
 
 			// Allow unauthenticated users in
 			if header == "" {
@@ -38,9 +40,7 @@ func Middleware(client *ent.Client) func(http.Handler) http.Handler {
 			splitTokenStr := strings.Split(tokenStr, "Bearer ")
 			tokenStr = splitTokenStr[1]
 
-			log.Println("this is the token string", tokenStr)
 			username, err := jwt.ParseToken(tokenStr)
-			log.Println("this is the username inside middleware", username)
 			if err != nil {
 				http.Error(w, "Invalid token", http.StatusForbidden)
 				return
@@ -54,12 +54,9 @@ func Middleware(client *ent.Client) func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
-			userInstance.ID = strconv.Itoa(user.ID)
+			userInstance.ID = user.ID
 			// put it in context
 			ctx = context.WithValue(r.Context(), userCtxKey, &userInstance)
-			// print context value with userCtxKey as key
-			log.Println("this is the user in context", ctx.Value(userCtxKey))
-			log.Println("this is the user instance inside middleware", userInstance)
 
 			// and call the next with our new context
 			r = r.WithContext(ctx)

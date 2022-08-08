@@ -132,7 +132,7 @@ type ComplexityRoot struct {
 		Comments      func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) int
 		Communities   func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommunityOrder, where *ent.CommunityWhereInput) int
 		Hello         func(childComplexity int) int
-		Me            func(childComplexity int, tokenString string) int
+		Me            func(childComplexity int) int
 		Node          func(childComplexity int, id int) int
 		Nodes         func(childComplexity int, ids []int) int
 		Posts         func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.PostOrder, where *ent.PostWhereInput) int
@@ -244,7 +244,7 @@ type QueryResolver interface {
 	Users(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) (*ent.UserConnection, error)
 	Hello(ctx context.Context) (*string, error)
 	Bye(ctx context.Context) (*string, error)
-	Me(ctx context.Context, tokenString string) (*ent.User, error)
+	Me(ctx context.Context) (*ent.User, error)
 }
 
 type executableSchema struct {
@@ -681,12 +681,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_me_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Me(childComplexity, args["tokenString"].(string)), true
+		return e.complexity.Query.Me(childComplexity), true
 
 	case "Query.node":
 		if e.complexity.Query.Node == nil {
@@ -2033,7 +2028,7 @@ extend type Mutation {
 }
 `, BuiltIn: false},
 	{Name: "../../schema/user.query.graphql", Input: `extend type Query {
-	me(tokenString: String!): User
+	me: User
 }
 `, BuiltIn: false},
 }
@@ -2313,21 +2308,6 @@ func (ec *executionContext) field_Query_communities_args(ctx context.Context, ra
 		}
 	}
 	args["where"] = arg5
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_me_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["tokenString"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tokenString"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["tokenString"] = arg0
 	return args, nil
 }
 
@@ -5720,7 +5700,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Me(rctx, fc.Args["tokenString"].(string))
+		return ec.resolvers.Query().Me(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5761,17 +5741,6 @@ func (ec *executionContext) fieldContext_Query_me(ctx context.Context, field gra
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_me_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
 	}
 	return fc, nil
 }

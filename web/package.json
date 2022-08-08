@@ -12,7 +12,8 @@
         "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
         "lint": "prettier --check --plugin-search-dir=. . && eslint .",
         "format": "prettier --write --plugin-search-dir=. .",
-        "generate": "houdini generate"
+        "generate": "houdini generate",
+        "gen": "graphql-codegen --config ./.graphqlrc.yaml"
     },
     "devDependencies": {
         "@kitql/vite-plugin-watch-and-run": "^0.4.2",
