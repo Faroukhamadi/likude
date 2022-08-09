@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/Faroukhamadi/likude/ent"
+	"github.com/Faroukhamadi/likude/helpers"
 	"github.com/Faroukhamadi/likude/jwt"
 )
 
@@ -18,6 +19,11 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserI
 		return "", fmt.Errorf("error generating token")
 	}
 	fmt.Println(token)
+	hashedPassword, err := helpers.HashPassword(input.Password)
+	if err != nil {
+		return "", fmt.Errorf("error creating hash")
+	}
+	input.Password = hashedPassword
 	_, err = ent.FromContext(ctx).User.
 		Create().
 		SetInput(input).

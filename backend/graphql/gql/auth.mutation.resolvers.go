@@ -6,11 +6,11 @@ package gql
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/Faroukhamadi/likude/ent/user"
 	"github.com/Faroukhamadi/likude/graphql/gql/generated"
 	"github.com/Faroukhamadi/likude/graphql/gql/model"
+	"github.com/Faroukhamadi/likude/helpers"
 	"github.com/Faroukhamadi/likude/jwt"
 )
 
@@ -20,14 +20,12 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (s
 	if err != nil {
 		return "", fmt.Errorf("user not found")
 	}
-	if user.Password == input.Password {
-		log.Println("password matches database")
+	correct := helpers.CheckPasswordHash(input.Password, user.Password)
+	if correct {
 		token, err := jwt.GenerateToken(user.Username)
 		if err != nil {
-			log.Println("error is different than nil")
 			return "", err
 		}
-		log.Println("this is the generated token", token)
 		return token, nil
 	} else {
 		return "", fmt.Errorf("incorrect password")
