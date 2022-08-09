@@ -4,20 +4,17 @@
 	import { browser } from '$app/env';
 	import { GQL_Bye, GQL_Hello, GQL_Me } from '$houdini';
 	import { goto } from '$app/navigation';
+	import parseJWT from '$lib/utils/parseJWT';
+	import type { SessionJWT } from '$lib/utils/parseJWT';
+
+	let jwt: SessionJWT;
 
 	$: browser && GQL_Hello.fetch();
 	$: browser && GQL_Bye.fetch();
 	$: browser && GQL_Me.fetch();
 	$: browser && !$GQL_Me.isFetching && !$GQL_Me.data?.me && goto('/login');
-	$: browser && !$GQL_Me.isFetching && !$GQL_Me.data?.me && console.log($GQL_Me.data?.me);
-
-	if ($GQL_Me.data?.me) {
-		console.log('user is logged in');
-		console.log($GQL_Me.data?.me);
-	} else {
-		console.log('user is not logged in');
-		console.log($GQL_Me.data?.me);
-	}
+	$: browser && localStorage.getItem('sid') && (jwt = parseJWT(localStorage.getItem('sid')!));
+	$: jwt && jwt.exp < Math.floor(Date.now() / 1000) && localStorage.removeItem('sid');
 </script>
 
 {#if $GQL_Hello.isFetching}

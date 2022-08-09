@@ -1,20 +1,11 @@
-<script context="module" lang="ts">
-	import type { Load } from '@sveltejs/kit';
-
-	export const load: Load = async ({ session }) => {
-		if (session.user) {
-			return {
-				status: 302,
-				redirect: '/'
-			};
-		}
-		return {};
-	};
-</script>
-
 <script lang="ts">
 	import { createForm } from 'felte';
-	import { GQL_Login } from '$houdini';
+	import { GQL_Login, GQL_Me } from '$houdini';
+	import { browser } from '$app/env';
+	import { goto } from '$app/navigation';
+
+	$: browser && GQL_Me.fetch();
+	$: browser && !$GQL_Me.isFetching && $GQL_Me.data?.me && goto('/');
 
 	const { form } = createForm({
 		onSubmit: async ({ username, password }) => {
@@ -28,7 +19,9 @@
 			});
 		},
 		onSuccess: async () => {
-			localStorage.setItem('sid', $GQL_Login.data?.login!);
+			if (browser) {
+				localStorage.setItem('sid', $GQL_Login.data?.login!);
+			}
 		},
 		onError: (error) => {
 			console.log('This is error', error);

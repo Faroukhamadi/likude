@@ -1,3 +1,4 @@
+import { browser } from '$app/env';
 import { HoudiniClient, type RequestHandlerArgs } from '$houdini';
 
 async function fetchQuery({
@@ -7,9 +8,6 @@ async function fetchQuery({
 	session,
 	metadata
 }: RequestHandlerArgs) {
-	let val = localStorage.getItem('sid') ? `Bearer ${localStorage.getItem('sid')}` : '';
-	console.log(val);
-
 	const url = import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:4000/query';
 	const result = await fetch(url, {
 		method: 'POST',
