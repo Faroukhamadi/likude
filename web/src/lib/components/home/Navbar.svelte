@@ -1,3 +1,9 @@
+<script lang="ts">
+	import { goto } from '$app/navigation';
+
+	export let username: string | undefined;
+</script>
+
 <div class="navbar bg-base-100 shadow-md">
 	<div class="flex-1">
 		<a class="btn btn-ghost normal-case text-xl">Likude</a>
@@ -18,12 +24,19 @@
 			>
 				<li>
 					<a class="justify-between">
-						Profile
-						<span class="badge">New</span>
+						{username}
+						<span class="badge">Profile</span>
 					</a>
 				</li>
 				<li><a>Settings</a></li>
-				<li><a>Logout</a></li>
+				<li
+					on:click={async () => {
+						localStorage.removeItem('sid');
+						await goto('/login');
+					}}
+				>
+					<a>Logout</a>
+				</li>
 			</ul>
 		</div>
 	</div>

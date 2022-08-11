@@ -43,5 +43,5 @@
 	<h1>Loading...</h1>
 {/if}
 
-<Navbar />
+<Navbar username={$GQL_Me.data?.me?.username} />
 <Main />

@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { createForm } from 'felte';
-	import { GQL_Login, GQL_Me } from '$houdini';
+	import { CachePolicy, GQL_Login, GQL_Me } from '$houdini';
 	import { browser } from '$app/env';
 	import { goto } from '$app/navigation';
 
-	$: browser && GQL_Me.fetch();
+	// always fetch me query
+	let policy: CachePolicy = CachePolicy.NetworkOnly;
+
+	$: browser && GQL_Me.fetch({ policy });
 	$: browser && !$GQL_Me.isFetching && $GQL_Me.data?.me && goto('/');
 
 	const { form } = createForm({
