@@ -2,7 +2,7 @@
 	import Navbar from '$lib/components/home/Navbar.svelte';
 	import Main from '$lib/components/home/main.svelte';
 	import { browser } from '$app/env';
-	import { CachePolicy, GQL_Bye, GQL_Hello, GQL_Me, GQL_Posts } from '$houdini';
+	import { GQL_Bye, GQL_Hello, GQL_Me } from '$houdini';
 	import { goto } from '$app/navigation';
 	import parseJWT from '$lib/utils/parseJWT';
 	import type { SessionJWT } from '$lib/utils/parseJWT';
@@ -12,12 +12,9 @@
 	$: browser && GQL_Hello.fetch();
 	$: browser && GQL_Bye.fetch();
 	$: browser && GQL_Me.fetch();
-	$: browser && GQL_Posts.fetch({ policy: CachePolicy.NetworkOnly });
 	$: browser && !$GQL_Me.isFetching && !$GQL_Me.data?.me && goto('/login');
 	$: browser && localStorage.getItem('sid') && (jwt = parseJWT(localStorage.getItem('sid')!));
 	$: jwt && jwt.exp < Math.floor(Date.now() / 1000) && localStorage.removeItem('sid');
-
-	console.log('posts inside: ', $GQL_Posts.data?.posts.edges);
 </script>
 
 <Navbar username={$GQL_Me.data?.me?.username} />
