@@ -66,6 +66,7 @@
 						<button class="btn btn-primary">Upvote</button>
 						<button class="btn btn-primary">Downvote</button>
 						<p>writer: {post.node.writer ? post.node.writer.username : 'anonymous'}</p>
+						<p>points: {post.node.points}</p>
 					</div>
 				</div>
 			</div>
