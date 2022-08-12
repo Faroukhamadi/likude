@@ -140,6 +140,7 @@ type ComplexityRoot struct {
 		Topicrelateds func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.TopicRelatedWhereInput) int
 		Topics        func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.TopicWhereInput) int
 		User          func(childComplexity int, username string) int
+		UserPosts     func(childComplexity int, userID int) int
 		Users         func(childComplexity int, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) int
 	}
 
@@ -245,6 +246,7 @@ type QueryResolver interface {
 	Users(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.UserOrder, where *ent.UserWhereInput) (*ent.UserConnection, error)
 	Hello(ctx context.Context) (*string, error)
 	Bye(ctx context.Context) (*string, error)
+	UserPosts(ctx context.Context, userID int) ([]*ent.Post, error)
 	Me(ctx context.Context) (*ent.User, error)
 	User(ctx context.Context, username string) (int, error)
 }
@@ -768,6 +770,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.User(childComplexity, args["username"].(string)), true
+
+	case "Query.UserPosts":
+		if e.complexity.Query.UserPosts == nil {
+			break
+		}
+
+		args, err := ec.field_Query_UserPosts_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UserPosts(childComplexity, args["userId"].(int)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -2023,6 +2037,10 @@ extend type Mutation {
 	deletePost(id: ID!): ID!
 }
 `, BuiltIn: false},
+	{Name: "../../schema/post.query.graphql", Input: `extend type Query {
+	UserPosts(userId: ID!): [Post!]!
+}
+`, BuiltIn: false},
 	{Name: "../../schema/schema.graphql", Input: `scalar Time
 `, BuiltIn: false},
 	{Name: "../../schema/user.mutation.graphql", Input: `input CreateUserInput {
@@ -2188,6 +2206,21 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 		}
 	}
 	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_UserPosts_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["userId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userId"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userId"] = arg0
 	return args, nil
 }
 
@@ -5712,6 +5745,79 @@ func (ec *executionContext) fieldContext_Query_bye(ctx context.Context, field gr
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_UserPosts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_UserPosts(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UserPosts(rctx, fc.Args["userId"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Post)
+	fc.Result = res
+	return ec.marshalNPost2ᚕᚖgithubᚗcomᚋFaroukhamadiᚋlikudeᚋentᚐPostᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_UserPosts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Post_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Post_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Post_updatedAt(ctx, field)
+			case "title":
+				return ec.fieldContext_Post_title(ctx, field)
+			case "content":
+				return ec.fieldContext_Post_content(ctx, field)
+			case "points":
+				return ec.fieldContext_Post_points(ctx, field)
+			case "writer":
+				return ec.fieldContext_Post_writer(ctx, field)
+			case "comments":
+				return ec.fieldContext_Post_comments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Post", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_UserPosts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -13903,6 +14009,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
+		case "UserPosts":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_UserPosts(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "me":
 			field := field
 
@@ -15150,6 +15279,50 @@ func (ec *executionContext) marshalNPageInfo2githubᚗcomᚋFaroukhamadiᚋlikud
 
 func (ec *executionContext) marshalNPost2githubᚗcomᚋFaroukhamadiᚋlikudeᚋentᚐPost(ctx context.Context, sel ast.SelectionSet, v ent.Post) graphql.Marshaler {
 	return ec._Post(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPost2ᚕᚖgithubᚗcomᚋFaroukhamadiᚋlikudeᚋentᚐPostᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.Post) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNPost2ᚖgithubᚗcomᚋFaroukhamadiᚋlikudeᚋentᚐPost(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNPost2ᚖgithubᚗcomᚋFaroukhamadiᚋlikudeᚋentᚐPost(ctx context.Context, sel ast.SelectionSet, v *ent.Post) graphql.Marshaler {

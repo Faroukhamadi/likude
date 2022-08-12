@@ -5,9 +5,13 @@
 	import type { SessionJWT } from '$lib/utils/parseJWT';
 	import parseJWT from '$lib/utils/parseJWT';
 
+	// we pass a prop, either "home" or "profile"
+
 	let jwt: SessionJWT;
 	let userId: number | undefined;
+	export let mainProp: 'home' | 'profile';
 
+	$: browser && GQL_Posts.fetch();
 	$: browser && GQL_Posts.fetch();
 	$: browser && localStorage.getItem('sid') && (jwt = parseJWT(localStorage.getItem('sid')!));
 	$: jwt && GQL_User.fetch({ variables: { username: jwt.username } });

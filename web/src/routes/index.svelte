@@ -18,4 +18,4 @@
 </script>
 
 <Navbar username={$GQL_Me.data?.me?.username} />
-<Main />
+<Main mainProp="home" />
