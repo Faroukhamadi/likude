@@ -24,6 +24,7 @@
 		onSuccess: async () => {
 			if (browser) {
 				localStorage.setItem('sid', $GQL_Login.data?.login!);
+				await goto('/');
 			}
 		},
 		onError: (error) => {
