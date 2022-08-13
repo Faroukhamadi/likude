@@ -1,0 +1,11 @@
+query UserPosts($userId: ID!) {
+	UserPosts(userId: $userId) {
+		id
+		title
+		content
+		points
+		writer {
+			username
+		}
+	}
+}

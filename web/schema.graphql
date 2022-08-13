@@ -447,6 +447,7 @@ input PostWhereInput {
 }
 
 type Query {
+  UserPosts(userId: ID!): [Post!]!
   bye: String
   comments(
     """Returns the elements in the list that come after the specified cursor."""
