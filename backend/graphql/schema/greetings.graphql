@@ -1,4 +1,5 @@
 extend type Query {
 	hello: String
 	bye: String
+	hellobye: String
 }

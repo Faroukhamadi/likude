@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { browser } from '$app/env';
-	import { GQL_CreatePost, GQL_Posts, GQL_User, GQL_UserPosts } from '$houdini';
+	import {
+		GQL_CreatePost,
+		GQL_Posts,
+		GQL_User,
+		GQL_UserPosts,
+		GQL_UpvotePost,
+		GQL_DownvotePost
+	} from '$houdini';
 	import { createForm } from 'felte';
 	import type { SessionJWT } from '$lib/utils/parseJWT';
 	import parseJWT from '$lib/utils/parseJWT';
@@ -71,8 +78,28 @@
 					<h2 class="card-title">{post.node.title}</h2>
 					<p>{post.node.content}</p>
 					<div class="card-actions justify-end">
-						<button class="btn btn-primary">Upvote</button>
-						<button class="btn btn-primary">Downvote</button>
+						<button
+							on:click={async () => {
+								await GQL_UpvotePost.mutate({
+									variables: {
+										id: post.node.id
+									}
+								});
+								console.log('upvote happened');
+							}}
+							class="btn btn-primary">Upvote</button
+						>
+						<button
+							on:click={async () => {
+								await GQL_DownvotePost.mutate({
+									variables: {
+										id: post.node.id
+									}
+								});
+								console.log('downvote happened');
+							}}
+							class="btn btn-primary">Downvote</button
+						>
 						<p>writer: {post.node.writer ? post.node.writer.username : 'anonymous'}</p>
 						<p>points: {post.node.points}</p>
 					</div>
@@ -87,8 +114,28 @@
 					<h2 class="card-title">{post.title}</h2>
 					<p>{post.content}</p>
 					<div class="card-actions justify-end">
-						<button class="btn btn-primary">Upvote</button>
-						<button class="btn btn-primary">Downvote</button>
+						<button
+							on:click={async () => {
+								await GQL_UpvotePost.mutate({
+									variables: {
+										id: post.id
+									}
+								});
+								console.log('upvote happened');
+							}}
+							class="btn btn-primary">Upvote</button
+						>
+						<button
+							on:click={async () => {
+								await GQL_DownvotePost.mutate({
+									variables: {
+										id: post.id
+									}
+								});
+								console.log('downvote happened');
+							}}
+							class="btn btn-primary">Downvote</button
+						>
 						<p>writer: {post.writer?.username}</p>
 						<p>points: {post.points}</p>
 					</div>

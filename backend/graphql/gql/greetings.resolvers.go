@@ -20,3 +20,9 @@ func (r *queryResolver) Bye(ctx context.Context) (*string, error) {
 	var greeting = "Bye world!"
 	return &greeting, nil
 }
+
+// Hellobye is the resolver for the hellobye field.
+func (r *queryResolver) Hellobye(ctx context.Context) (*string, error) {
+	var greeting = "Hello Bye world!"
+	return &greeting, nil
+}

@@ -267,10 +267,12 @@ type Mutation {
   createUser(input: CreateUserInput!): String!
   deletePost(id: ID!): ID!
   deleteUser(id: ID!): ID!
+  downvotePost(id: ID!): Post!
   login(input: LoginInput!): String!
   refreshToken(input: RefreshTokenInput!): String!
   updatePost(id: ID!, input: UpdatePostInput!): Post!
   updateUser(id: ID!, input: UpdateUserInput!): User!
+  upvotePost(id: ID!): Post!
 }
 
 """
@@ -492,6 +494,7 @@ type Query {
     where: CommunityWhereInput
   ): CommunityConnection!
   hello: String
+  hellobye: String
   me: User
 
   """Fetches an object given its ID."""

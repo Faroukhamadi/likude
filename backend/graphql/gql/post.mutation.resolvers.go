@@ -27,3 +27,13 @@ func (r *mutationResolver) UpdatePost(ctx context.Context, id int, input ent.Upd
 func (r *mutationResolver) DeletePost(ctx context.Context, id int) (int, error) {
 	panic(fmt.Errorf("not implemented"))
 }
+
+// UpvotePost is the resolver for the upvotePost field.
+func (r *mutationResolver) UpvotePost(ctx context.Context, id int) (*ent.Post, error) {
+	return r.client.Post.UpdateOneID(id).AddPoints(1).Save(ctx)
+}
+
+// DownvotePost is the resolver for the downvotePost field.
+func (r *mutationResolver) DownvotePost(ctx context.Context, id int) (*ent.Post, error) {
+	return r.client.Post.UpdateOneID(id).AddPoints(-1).Save(ctx)
+}
