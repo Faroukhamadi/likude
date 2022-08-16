@@ -1,4 +1,3 @@
-import { browser } from '$app/env';
 import { HoudiniClient, type RequestHandlerArgs } from '$houdini';
 
 async function fetchQuery({
