@@ -88,51 +88,55 @@
 
 <div class="post-container">
 	<!-- ----------------------HOME SECTION------------------------------- -->
-	{#if $GQL_Posts.data?.posts && mainProp === 'home'}
+	{#if $GQL_Posts.data?.posts.edges && mainProp === 'home'}
 		{#each $GQL_Posts.data?.posts.edges as post}
-			<div class="card w-96 bg-base-100 shadow-xl">
-				<div class="card-body">
-					<h2 class="card-title">{post.node.title}</h2>
-					<p>{post.node.content}</p>
-					<div class="card-actions justify-end">
-						<button
-							on:click={async () => {
-								await GQL_UpvotePost.mutate({
-									variables: {
-										id: post.node.id
-									}
-								});
-								console.log('upvote happened');
-							}}
-							class="btn btn-primary">Upvote</button
-						>
-						<button
-							on:click={async () => {
-								await GQL_DownvotePost.mutate({
-									variables: {
-										id: post.node.id
-									}
-								});
-								console.log('downvote happened');
-							}}
-							class="btn btn-primary">Downvote</button
-						>
-						<p>
-							<!-- SECTION I'M WORKING ON -->
-							writer:
-							<a
+			{#if post && post?.node !== null}
+				<div class="card w-96 bg-base-100 shadow-xl">
+					<div class="card-body">
+						<h2 class="card-title">{post.node.title}</h2>
+						<p>{post.node.content}</p>
+						<div class="card-actions justify-end">
+							<button
 								on:click={async () => {
-									usernameForProfile.set(post.node.writer.username);
-									console.log('usernameForProfile getting assigned: ', get(usernameForProfile));
-									await goto('/profile');
+									post.node &&
+										(await GQL_UpvotePost.mutate({
+											variables: {
+												id: post.node.id
+											}
+										}));
+									console.log('upvote happened');
 								}}
-								class="link">{post.node.writer ? post.node.writer.username : 'anonymous'}</a
+								class="btn btn-primary">Upvote</button
 							>
-						</p>
-						<p>points: {post.node.points}</p>
+							<button
+								on:click={async () => {
+									post.node &&
+										(await GQL_DownvotePost.mutate({
+											variables: {
+												id: post.node.id
+											}
+										}));
+									console.log('downvote happened');
+								}}
+								class="btn btn-primary">Downvote</button
+							>
+							<p>
+								<!-- SECTION I'M WORKING ON -->
+								writer:
+								<a
+									on:click={async () => {
+										post.node?.writer && usernameForProfile.set(post.node.writer.username);
+										console.log('usernameForProfile getting assigned: ', get(usernameForProfile));
+										await goto('/profile');
+									}}
+									class="link">{post.node.writer ? post.node.writer.username : 'anonymous'}</a
+								>
+							</p>
+							<p>points: {post.node.points}</p>
+						</div>
 					</div>
 				</div>
-			</div>
+			{/if}
 		{/each}
 		<!-- ----------------------MY PROFILE SECTION------------------------------- -->
 	{:else if $GQL_UserPosts.data && mainProp === 'my_profile'}
@@ -205,7 +209,7 @@
 					</div>
 				</div>
 			</div>
-		{/each}
+		{/each}￼ ￼ ￼CREATE POST
 	{/if}
 </div>
 
