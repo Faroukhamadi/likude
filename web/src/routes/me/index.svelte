@@ -9,6 +9,7 @@
 
 	let jwt: SessionJWT;
 	let username: string;
+	let usernameForProfile: string = '';
 
 	$: browser && GQL_Me.fetch();
 	$: browser && !$GQL_Me.isFetching && !$GQL_Me.data?.me && goto('/login');
@@ -18,4 +19,4 @@
 </script>
 
 <Navbar {username} />
-<Main mainProp="my_profile" {username} />
+<Main mainProp="my_profile" {username} {usernameForProfile} />

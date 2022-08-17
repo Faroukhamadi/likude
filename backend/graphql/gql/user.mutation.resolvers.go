@@ -18,10 +18,9 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserI
 	if err != nil {
 		return "", fmt.Errorf("error generating token")
 	}
-	fmt.Println(token)
 	hashedPassword, err := helpers.HashPassword(input.Password)
 	if err != nil {
-		return "", fmt.Errorf("error creating hash")
+		return "", fmt.Errorf("error creating hashed password")
 	}
 	input.Password = hashedPassword
 	_, err = ent.FromContext(ctx).User.
