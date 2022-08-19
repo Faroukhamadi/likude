@@ -34,11 +34,13 @@ const (
 	WriterInverseTable = "users"
 	// WriterColumn is the table column denoting the writer relation/edge.
 	WriterColumn = "user_posts"
-	// CommentsTable is the table that holds the comments relation/edge. The primary key declared below.
-	CommentsTable = "post_comments"
+	// CommentsTable is the table that holds the comments relation/edge.
+	CommentsTable = "comments"
 	// CommentsInverseTable is the table name for the Comment entity.
 	// It exists in this package in order to avoid circular dependency with the "comment" package.
 	CommentsInverseTable = "comments"
+	// CommentsColumn is the table column denoting the comments relation/edge.
+	CommentsColumn = "post_comments"
 )
 
 // Columns holds all SQL columns for post fields.
@@ -56,12 +58,6 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"user_posts",
 }
-
-var (
-	// CommentsPrimaryKey and CommentsColumn2 are the table columns denoting the
-	// primary key for the comments relation (M2M).
-	CommentsPrimaryKey = []string{"post_id", "comment_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

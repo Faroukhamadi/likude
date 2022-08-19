@@ -12,7 +12,7 @@ type CreateCommentInput struct {
 	UpdatedAt *time.Time
 	Content   string
 	Points    float64
-	PostIDs   []int
+	PostID   int
 	ReplyIDs  []int
 }
 
@@ -26,9 +26,7 @@ func (i *CreateCommentInput) Mutate(m *CommentMutation) {
 	}
 	m.SetContent(i.Content)
 	m.SetPoints(i.Points)
-	if v := i.PostIDs; len(v) > 0 {
-		m.AddPostIDs(v...)
-	}
+	m.SetPostID(i.PostID)
 	if v := i.ReplyIDs; len(v) > 0 {
 		m.AddReplyIDs(v...)
 	}
@@ -45,8 +43,8 @@ type UpdateCommentInput struct {
 	UpdatedAt      *time.Time
 	Content        *string
 	Points         *float64
-	AddPostIDs     []int
-	RemovePostIDs  []int
+	AddPostID     int
+	RemovePostID  int
 	AddReplyIDs    []int
 	RemoveReplyIDs []int
 }
@@ -62,11 +60,8 @@ func (i *UpdateCommentInput) Mutate(m *CommentMutation) {
 	if v := i.Points; v != nil {
 		m.SetPoints(*v)
 	}
-	if v := i.AddPostIDs; len(v) > 0 {
-		m.AddPostIDs(v...)
-	}
-	if v := i.RemovePostIDs; len(v) > 0 {
-		m.RemovePostIDs(v...)
+	if v := i.AddPostID; v != 0 {
+		m.SetPostID(v)
 	}
 	if v := i.AddReplyIDs; len(v) > 0 {
 		m.AddReplyIDs(v...)

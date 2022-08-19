@@ -15,12 +15,21 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "content", Type: field.TypeString},
 		{Name: "points", Type: field.TypeFloat64},
+		{Name: "post_comments", Type: field.TypeInt, Nullable: true},
 	}
 	// CommentsTable holds the schema information for the "comments" table.
 	CommentsTable = &schema.Table{
 		Name:       "comments",
 		Columns:    CommentsColumns,
 		PrimaryKey: []*schema.Column{CommentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "comments_posts_comments",
+				Columns:    []*schema.Column{CommentsColumns[5]},
+				RefColumns: []*schema.Column{PostsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// CommunitiesColumns holds the columns for the "communities" table.
 	CommunitiesColumns = []*schema.Column{
@@ -183,31 +192,6 @@ var (
 			},
 		},
 	}
-	// PostCommentsColumns holds the columns for the "post_comments" table.
-	PostCommentsColumns = []*schema.Column{
-		{Name: "post_id", Type: field.TypeInt},
-		{Name: "comment_id", Type: field.TypeInt},
-	}
-	// PostCommentsTable holds the schema information for the "post_comments" table.
-	PostCommentsTable = &schema.Table{
-		Name:       "post_comments",
-		Columns:    PostCommentsColumns,
-		PrimaryKey: []*schema.Column{PostCommentsColumns[0], PostCommentsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "post_comments_post_id",
-				Columns:    []*schema.Column{PostCommentsColumns[0]},
-				RefColumns: []*schema.Column{PostsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "post_comments_comment_id",
-				Columns:    []*schema.Column{PostCommentsColumns[1]},
-				RefColumns: []*schema.Column{CommentsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CommentsTable,
@@ -219,11 +203,11 @@ var (
 		UsersTable,
 		CommentRepliesTable,
 		CommunityUsersTable,
-		PostCommentsTable,
 	}
 )
 
 func init() {
+	CommentsTable.ForeignKeys[0].RefTable = PostsTable
 	PostsTable.ForeignKeys[0].RefTable = UsersTable
 	TopicRelatedsTable.ForeignKeys[0].RefTable = TopicsTable
 	TopicRelatedsTable.ForeignKeys[1].RefTable = TopicsTable
@@ -231,6 +215,4 @@ func init() {
 	CommentRepliesTable.ForeignKeys[1].RefTable = RepliesTable
 	CommunityUsersTable.ForeignKeys[0].RefTable = CommunitiesTable
 	CommunityUsersTable.ForeignKeys[1].RefTable = UsersTable
-	PostCommentsTable.ForeignKeys[0].RefTable = PostsTable
-	PostCommentsTable.ForeignKeys[1].RefTable = CommentsTable
 }

@@ -51,8 +51,7 @@ type CommentMutation struct {
 	points         *float64
 	addpoints      *float64
 	clearedFields  map[string]struct{}
-	post           map[int]struct{}
-	removedpost    map[int]struct{}
+	post           *int
 	clearedpost    bool
 	replies        map[int]struct{}
 	removedreplies map[int]struct{}
@@ -324,14 +323,9 @@ func (m *CommentMutation) ResetPoints() {
 	m.addpoints = nil
 }
 
-// AddPostIDs adds the "post" edge to the Post entity by ids.
-func (m *CommentMutation) AddPostIDs(ids ...int) {
-	if m.post == nil {
-		m.post = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.post[ids[i]] = struct{}{}
-	}
+// SetPostID sets the "post" edge to the Post entity by id.
+func (m *CommentMutation) SetPostID(id int) {
+	m.post = &id
 }
 
 // ClearPost clears the "post" edge to the Post entity.
@@ -344,29 +338,20 @@ func (m *CommentMutation) PostCleared() bool {
 	return m.clearedpost
 }
 
-// RemovePostIDs removes the "post" edge to the Post entity by IDs.
-func (m *CommentMutation) RemovePostIDs(ids ...int) {
-	if m.removedpost == nil {
-		m.removedpost = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.post, ids[i])
-		m.removedpost[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedPost returns the removed IDs of the "post" edge to the Post entity.
-func (m *CommentMutation) RemovedPostIDs() (ids []int) {
-	for id := range m.removedpost {
-		ids = append(ids, id)
+// PostID returns the "post" edge ID in the mutation.
+func (m *CommentMutation) PostID() (id int, exists bool) {
+	if m.post != nil {
+		return *m.post, true
 	}
 	return
 }
 
 // PostIDs returns the "post" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// PostID instead. It exists only for internal usage by the builders.
 func (m *CommentMutation) PostIDs() (ids []int) {
-	for id := range m.post {
-		ids = append(ids, id)
+	if id := m.post; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -375,7 +360,6 @@ func (m *CommentMutation) PostIDs() (ids []int) {
 func (m *CommentMutation) ResetPost() {
 	m.post = nil
 	m.clearedpost = false
-	m.removedpost = nil
 }
 
 // AddReplyIDs adds the "replies" edge to the Reply entity by ids.
@@ -631,11 +615,9 @@ func (m *CommentMutation) AddedEdges() []string {
 func (m *CommentMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case comment.EdgePost:
-		ids := make([]ent.Value, 0, len(m.post))
-		for id := range m.post {
-			ids = append(ids, id)
+		if id := m.post; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case comment.EdgeReplies:
 		ids := make([]ent.Value, 0, len(m.replies))
 		for id := range m.replies {
@@ -649,9 +631,6 @@ func (m *CommentMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *CommentMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
-	if m.removedpost != nil {
-		edges = append(edges, comment.EdgePost)
-	}
 	if m.removedreplies != nil {
 		edges = append(edges, comment.EdgeReplies)
 	}
@@ -662,12 +641,6 @@ func (m *CommentMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *CommentMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case comment.EdgePost:
-		ids := make([]ent.Value, 0, len(m.removedpost))
-		for id := range m.removedpost {
-			ids = append(ids, id)
-		}
-		return ids
 	case comment.EdgeReplies:
 		ids := make([]ent.Value, 0, len(m.removedreplies))
 		for id := range m.removedreplies {
@@ -706,6 +679,9 @@ func (m *CommentMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *CommentMutation) ClearEdge(name string) error {
 	switch name {
+	case comment.EdgePost:
+		m.ClearPost()
+		return nil
 	}
 	return fmt.Errorf("unknown Comment unique edge %s", name)
 }

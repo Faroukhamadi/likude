@@ -4,12 +4,12 @@ package ent
 
 import "context"
 
-func (c *Comment) Post(ctx context.Context) ([]*Post, error) {
+func (c *Comment) Post(ctx context.Context) (*Post, error) {
 	result, err := c.Edges.PostOrErr()
 	if IsNotLoaded(err) {
-		result, err = c.QueryPost().All(ctx)
+		result, err = c.QueryPost().Only(ctx)
 	}
-	return result, err
+	return result, MaskNotFound(err)
 }
 
 func (c *Comment) Replies(ctx context.Context) ([]*Reply, error) {

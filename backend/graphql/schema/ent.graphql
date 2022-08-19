@@ -6,7 +6,7 @@ type Comment implements Node {
   updatedAt: Time!
   content: String!
   points: Float!
-  post: [Post!]
+  post: Post
   replies: [Reply!]
 }
 """A connection to a list of items."""
@@ -36,7 +36,6 @@ input CommentOrder {
 enum CommentOrderField {
   CREATED_AT
   UPDATED_AT
-  POINTS
 }
 """
 CommentWhereInput is used for filtering Comment objects.

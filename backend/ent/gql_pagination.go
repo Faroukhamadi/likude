@@ -469,16 +469,6 @@ var (
 			}
 		},
 	}
-	// CommentOrderFieldPoints orders Comment by points.
-	CommentOrderFieldPoints = &CommentOrderField{
-		field: comment.FieldPoints,
-		toCursor: func(c *Comment) Cursor {
-			return Cursor{
-				ID:    c.ID,
-				Value: c.Points,
-			}
-		},
-	}
 )
 
 // String implement fmt.Stringer interface.
@@ -489,8 +479,6 @@ func (f CommentOrderField) String() string {
 		str = "CREATED_AT"
 	case comment.FieldUpdatedAt:
 		str = "UPDATED_AT"
-	case comment.FieldPoints:
-		str = "POINTS"
 	}
 	return str
 }
@@ -511,8 +499,6 @@ func (f *CommentOrderField) UnmarshalGQL(v interface{}) error {
 		*f = *CommentOrderFieldCreatedAt
 	case "UPDATED_AT":
 		*f = *CommentOrderFieldUpdatedAt
-	case "POINTS":
-		*f = *CommentOrderFieldPoints
 	default:
 		return fmt.Errorf("%s is not a valid CommentOrderField", str)
 	}

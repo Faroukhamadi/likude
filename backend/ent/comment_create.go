@@ -64,19 +64,23 @@ func (cc *CommentCreate) SetPoints(f float64) *CommentCreate {
 	return cc
 }
 
-// AddPostIDs adds the "post" edge to the Post entity by IDs.
-func (cc *CommentCreate) AddPostIDs(ids ...int) *CommentCreate {
-	cc.mutation.AddPostIDs(ids...)
+// SetPostID sets the "post" edge to the Post entity by ID.
+func (cc *CommentCreate) SetPostID(id int) *CommentCreate {
+	cc.mutation.SetPostID(id)
 	return cc
 }
 
-// AddPost adds the "post" edges to the Post entity.
-func (cc *CommentCreate) AddPost(p ...*Post) *CommentCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillablePostID sets the "post" edge to the Post entity by ID if the given value is not nil.
+func (cc *CommentCreate) SetNillablePostID(id *int) *CommentCreate {
+	if id != nil {
+		cc = cc.SetPostID(*id)
 	}
-	return cc.AddPostIDs(ids...)
+	return cc
+}
+
+// SetPost sets the "post" edge to the Post entity.
+func (cc *CommentCreate) SetPost(p *Post) *CommentCreate {
+	return cc.SetPostID(p.ID)
 }
 
 // AddReplyIDs adds the "replies" edge to the Reply entity by IDs.
@@ -257,10 +261,10 @@ func (cc *CommentCreate) createSpec() (*Comment, *sqlgraph.CreateSpec) {
 	}
 	if nodes := cc.mutation.PostIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   comment.PostTable,
-			Columns: comment.PostPrimaryKey,
+			Columns: []string{comment.PostColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
@@ -272,6 +276,7 @@ func (cc *CommentCreate) createSpec() (*Comment, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.post_comments = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := cc.mutation.RepliesIDs(); len(nodes) > 0 {

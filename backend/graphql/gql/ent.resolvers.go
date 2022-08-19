@@ -23,7 +23,7 @@ func (r *queryResolver) Nodes(ctx context.Context, ids []int) ([]ent.Noder, erro
 
 // Comments is the resolver for the comments field.
 func (r *queryResolver) Comments(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.CommentOrder, where *ent.CommentWhereInput) (*ent.CommentConnection, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.client.Comment.Query().Paginate(ctx, after, first, before, last, ent.WithCommentOrder(orderBy))
 }
 
 // Communities is the resolver for the communities field.
@@ -33,6 +33,7 @@ func (r *queryResolver) Communities(ctx context.Context, after *ent.Cursor, firs
 
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.PostOrder, where *ent.PostWhereInput) (*ent.PostConnection, error) {
+	fmt.Println("we are getting posts")
 	return r.client.Post.Query().
 		Paginate(ctx, after, first, before, last, ent.WithPostOrder(orderBy))
 }

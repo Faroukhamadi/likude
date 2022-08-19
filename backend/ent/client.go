@@ -260,7 +260,7 @@ func (c *CommentClient) QueryPost(co *Comment) *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(comment.Table, comment.FieldID, id),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, comment.PostTable, comment.PostPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, comment.PostTable, comment.PostColumn),
 		)
 		fromV = sqlgraph.Neighbors(co.driver.Dialect(), step)
 		return fromV, nil
@@ -504,7 +504,7 @@ func (c *PostClient) QueryComments(po *Post) *CommentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(comment.Table, comment.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, post.CommentsTable, post.CommentsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, post.CommentsTable, post.CommentsColumn),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil

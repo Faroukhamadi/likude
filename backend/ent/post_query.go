@@ -104,7 +104,7 @@ func (pq *PostQuery) QueryComments() *CommentQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, selector),
 			sqlgraph.To(comment.Table, comment.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, post.CommentsTable, post.CommentsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, post.CommentsTable, post.CommentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -458,55 +458,31 @@ func (pq *PostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Post, e
 	}
 
 	if query := pq.withComments; query != nil {
-		edgeids := make([]driver.Value, len(nodes))
-		byid := make(map[int]*Post)
-		nids := make(map[int]map[*Post]struct{})
-		for i, node := range nodes {
-			edgeids[i] = node.ID
-			byid[node.ID] = node
-			node.Edges.Comments = []*Comment{}
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Post)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Comments = []*Comment{}
 		}
-		query.Where(func(s *sql.Selector) {
-			joinT := sql.Table(post.CommentsTable)
-			s.Join(joinT).On(s.C(comment.FieldID), joinT.C(post.CommentsPrimaryKey[1]))
-			s.Where(sql.InValues(joinT.C(post.CommentsPrimaryKey[0]), edgeids...))
-			columns := s.SelectedColumns()
-			s.Select(joinT.C(post.CommentsPrimaryKey[0]))
-			s.AppendSelect(columns...)
-			s.SetDistinct(false)
-		})
-		neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]interface{}, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]interface{}{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []interface{}) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Post]struct{}{byid[outValue]: struct{}{}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byid[outValue]] = struct{}{}
-				return nil
-			}
-		})
+		query.withFKs = true
+		query.Where(predicate.Comment(func(s *sql.Selector) {
+			s.Where(sql.InValues(post.CommentsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			nodes, ok := nids[n.ID]
+			fk := n.post_comments
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "post_comments" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected "comments" node returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "post_comments" returned %v for node %v`, *fk, n.ID)
 			}
-			for kn := range nodes {
-				kn.Edges.Comments = append(kn.Edges.Comments, n)
-			}
+			node.Edges.Comments = append(node.Edges.Comments, n)
 		}
 	}
 
