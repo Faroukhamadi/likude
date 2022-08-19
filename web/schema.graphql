@@ -7,7 +7,7 @@ type Comment implements Node {
   createdAt: Time!
   id: ID!
   points: Float!
-  post: [Post!]
+  post: Post
   replies: [Reply!]
   updatedAt: Time!
 }
@@ -45,7 +45,6 @@ input CommentOrder {
 """Properties by which Comment connections can be ordered."""
 enum CommentOrderField {
   CREATED_AT
-  POINTS
   UPDATED_AT
 }
 
@@ -240,6 +239,11 @@ input CommunityWhereInput {
   updatedAtNotIn: [Time!]
 }
 
+input CreateCommentInput {
+  content: String!
+  postId: ID!
+}
+
 input CreatePostInput {
   WriterID: Int
   content: String
@@ -263,6 +267,7 @@ input LoginInput {
 }
 
 type Mutation {
+  createComment(input: CreateCommentInput!): Comment!
   createPost(input: CreatePostInput!): Post!
   createUser(input: CreateUserInput!): String!
   deletePost(id: ID!): ID!
@@ -449,6 +454,7 @@ input PostWhereInput {
 }
 
 type Query {
+  PostComments(postId: ID!): [Comment!]!
   UserPosts(userId: ID!): [Post!]!
   bye: String
   comments(

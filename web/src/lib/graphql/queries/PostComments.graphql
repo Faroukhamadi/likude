@@ -1,0 +1,7 @@
+query PostComments($postId: ID!) {
+	PostComments(postId: $postId) {
+		id
+		content
+		points
+	}
+}
