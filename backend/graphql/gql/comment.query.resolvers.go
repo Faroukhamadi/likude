@@ -5,6 +5,7 @@ package gql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Faroukhamadi/likude/ent"
 	"github.com/Faroukhamadi/likude/ent/comment"
@@ -13,5 +14,6 @@ import (
 
 // PostComments is the resolver for the PostComments field.
 func (r *queryResolver) PostComments(ctx context.Context, postID int) ([]*ent.Comment, error) {
+	fmt.Println(r.client.Comment.Query().Where(comment.HasPostWith(post.ID(postID))).All(ctx))
 	return r.client.Comment.Query().Where(comment.HasPostWith(post.ID(postID))).All(ctx)
 }

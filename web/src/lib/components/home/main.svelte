@@ -6,7 +6,10 @@
 		GQL_User,
 		GQL_UserPosts,
 		GQL_UpvotePost,
-		GQL_DownvotePost
+		GQL_DownvotePost,
+		GQL_PostComments,
+		GQL_CreateComment,
+		CachePolicy
 	} from '$houdini';
 	import { createForm } from 'felte';
 	import type { SessionJWT } from '$lib/utils/parseJWT';
@@ -31,6 +34,9 @@
 		usernameForProfile !== '' &&
 		mainProp === 'user_profile' &&
 		GQL_UserPosts.fetch({ variables: { userId: usernameForProfile } });
+
+	// conditional here (later)
+	// $: browser && GQL_PostComments.fetch({variables: {postId: }})
 
 	$: browser && localStorage.getItem('sid') && (jwt = parseJWT(localStorage.getItem('sid')!));
 
@@ -85,51 +91,60 @@
 	<!-- ----------------------HOME SECTION------------------------------- -->
 	{#if $GQL_Posts.data?.posts.edges && mainProp === 'home'}
 		{#each $GQL_Posts.data?.posts.edges as post}
-			{#if post && post?.node !== null}
-				<div class="card w-96 bg-base-100 shadow-xl">
-					<div class="card-body">
-						<h2 class="card-title">{post.node.title}</h2>
-						<p>{post.node.content}</p>
-						<div class="card-actions justify-end">
-							<button
-								on:click={async () => {
-									post.node &&
-										(await GQL_UpvotePost.mutate({
-											variables: {
-												id: post.node.id
-											}
-										}));
-								}}
-								class="btn btn-primary">Upvote</button
-							>
-							<button
-								on:click={async () => {
-									post.node &&
-										(await GQL_DownvotePost.mutate({
-											variables: {
-												id: post.node.id
-											}
-										}));
-								}}
-								class="btn btn-primary">Downvote</button
-							>
-							<p>
-								<!-- SECTION I'M WORKING ON -->
-								writer:
-								<a
+			{#await GQL_PostComments.fetch( { variables: { postId: post?.node?.id }, policy: CachePolicy.NetworkOnly } ) then value}
+				{#if post && post?.node !== null}
+					<div class="card w-96 bg-base-100 shadow-xl">
+						<div class="card-body">
+							<h2 class="card-title">{post.node.title}</h2>
+							<p>{post.node.content}</p>
+							<div class="card-actions justify-end">
+								<button
 									on:click={async () => {
-										post.node?.writer && (usernameForProfile = post.node.writer.username);
-										await GQL_User.fetch({ variables: { username: usernameForProfile } });
-										await goto(`/users/${$GQL_User.data?.user}`);
+										post.node &&
+											(await GQL_UpvotePost.mutate({
+												variables: {
+													id: post.node.id
+												}
+											}));
 									}}
-									class="link">{post.node.writer ? post.node.writer.username : 'anonymous'}</a
+									class="btn btn-primary">Upvote</button
 								>
-							</p>
-							<p>points: {post.node.points}</p>
+								<button
+									on:click={async () => {
+										post.node &&
+											(await GQL_DownvotePost.mutate({
+												variables: {
+													id: post.node.id
+												}
+											}));
+									}}
+									class="btn btn-primary">Downvote</button
+								>
+								<p>
+									writer:
+									<a
+										on:click={async () => {
+											post.node?.writer && (usernameForProfile = post.node.writer.username);
+											await GQL_User.fetch({ variables: { username: usernameForProfile } });
+											await goto(`/users/${$GQL_User.data?.user}`);
+										}}
+										class="link">{post.node.writer ? post.node.writer.username : 'anonymous'}</a
+									>
+								</p>
+								<p>points: {post.node.points}</p>
+							</div>
+							{#if value.data?.PostComments.length}
+								<h3 class="text-xl">Comments:</h3>
+								{#each value.data?.PostComments as comment}
+									Anonymous: {comment.content}
+								{/each}
+							{/if}
 						</div>
 					</div>
-				</div>
-			{/if}
+				{/if}
+			{:catch error}
+				{error.message}
+			{/await}
 		{/each}
 		<!-- ----------------------MY PROFILE SECTION------------------------------- -->
 	{:else if $GQL_UserPosts.data && mainProp === 'my_profile'}

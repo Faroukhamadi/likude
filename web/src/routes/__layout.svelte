@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
-	import client from '../client';
 	import '../app.css';
+	import client from '../client';
 
 	client.init();
 </script>
