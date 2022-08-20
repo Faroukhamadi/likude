@@ -18,6 +18,7 @@
 
 	let jwt: SessionJWT;
 	let userId: number | undefined;
+	let clickedPostId: string = '';
 
 	export let usernameForProfile: string;
 	export let username: string;
@@ -69,31 +70,19 @@
 
 	const { form: form1, reset: reset1 } = createForm({
 		onSubmit: async (values) => {
-			console.log('this is values: ', values);
-			reset1();
+			console.log('clickedPostId from onSubmit: ', clickedPostId);
+			for (const comment of values.comment) {
+				let id = Object.keys(comment);
+				let content: string[] = Object.values(comment);
+				if (clickedPostId === id[0]) {
+					await GQL_CreateComment.mutate({
+						variables: { input: { content: content[0], postId: clickedPostId } }
+					});
+				}
+			}
 		}
 	});
 </script>
-
-<!--  Experiment section -->
-<h1>Cool form begin</h1>
-<form use:form1>
-	<input
-		type="text"
-		placeholder="Thing1"
-		name="thing1"
-		class="input input-bordered min-w-full max-w-xs my-2"
-	/>
-	<input
-		type="text"
-		placeholder="Thing2"
-		name="thing2"
-		class="input input-bordered min-w-full max-w-xs my-2"
-	/>
-	<button class="btn">Submit thingies</button>
-</form>
-<h1>Cool form end</h1>
-<!--  Experiment section -->
 
 <form use:form>
 	<input
@@ -160,26 +149,21 @@
 							{#if value.data?.PostComments.length}
 								<h3 class="text-xl">Comments:</h3>
 								{#each value.data?.PostComments as comment}
-									Anonymous: {comment.content}
+									<p>Anonymous: {comment.content}</p>
 								{/each}
 							{/if}
-							<!-- put comment here -->
-							<h1 class="card-title">index: {i}</h1>
-							<!-- <form
-								on:submit|preventDefault={(e) => {
-									console.log(e);
-								}}
-							>
-								<input type="text" name="" class="input input-bordered min-w-full max-w-xs my-2" />
-								<button class="btn">Create Comment</button>
-							</form> -->
 							<form use:form1>
 								<input
 									type="text"
 									class="input input-bordered min-w-full max-w-xs my-2"
-									name="comment.{i}"
+									name="comment.{i}.{post.node.id}"
 								/>
-								<button class="btn">Create Comment</button>
+								<button
+									class={`btn ${post.node.id}`}
+									on:click={(e) => {
+										clickedPostId = e.currentTarget.className.split(' ')[1];
+									}}>Create Comment</button
+								>
 							</form>
 						</div>
 					</div>
