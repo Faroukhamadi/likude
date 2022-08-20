@@ -35,9 +35,6 @@
 		mainProp === 'user_profile' &&
 		GQL_UserPosts.fetch({ variables: { userId: usernameForProfile } });
 
-	// conditional here (later)
-	// $: browser && GQL_PostComments.fetch({variables: {postId: }})
-
 	$: browser && localStorage.getItem('sid') && (jwt = parseJWT(localStorage.getItem('sid')!));
 
 	// conditional here
@@ -69,7 +66,34 @@
 			console.log('this is error', error);
 		}
 	});
+
+	const { form: form1, reset: reset1 } = createForm({
+		onSubmit: async (values) => {
+			console.log('this is values: ', values);
+			reset1();
+		}
+	});
 </script>
+
+<!--  Experiment section -->
+<h1>Cool form begin</h1>
+<form use:form1>
+	<input
+		type="text"
+		placeholder="Thing1"
+		name="thing1"
+		class="input input-bordered min-w-full max-w-xs my-2"
+	/>
+	<input
+		type="text"
+		placeholder="Thing2"
+		name="thing2"
+		class="input input-bordered min-w-full max-w-xs my-2"
+	/>
+	<button class="btn">Submit thingies</button>
+</form>
+<h1>Cool form end</h1>
+<!--  Experiment section -->
 
 <form use:form>
 	<input
@@ -90,7 +114,7 @@
 <div class="post-container">
 	<!-- ----------------------HOME SECTION------------------------------- -->
 	{#if $GQL_Posts.data?.posts.edges && mainProp === 'home'}
-		{#each $GQL_Posts.data?.posts.edges as post}
+		{#each $GQL_Posts.data?.posts.edges as post, i}
 			{#await GQL_PostComments.fetch( { variables: { postId: post?.node?.id }, policy: CachePolicy.NetworkOnly } ) then value}
 				{#if post && post?.node !== null}
 					<div class="card w-96 bg-base-100 shadow-xl">
@@ -139,6 +163,24 @@
 									Anonymous: {comment.content}
 								{/each}
 							{/if}
+							<!-- put comment here -->
+							<h1 class="card-title">index: {i}</h1>
+							<!-- <form
+								on:submit|preventDefault={(e) => {
+									console.log(e);
+								}}
+							>
+								<input type="text" name="" class="input input-bordered min-w-full max-w-xs my-2" />
+								<button class="btn">Create Comment</button>
+							</form> -->
+							<form use:form1>
+								<input
+									type="text"
+									class="input input-bordered min-w-full max-w-xs my-2"
+									name="comment.{i}"
+								/>
+								<button class="btn">Create Comment</button>
+							</form>
 						</div>
 					</div>
 				{/if}
