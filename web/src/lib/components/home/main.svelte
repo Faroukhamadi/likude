@@ -71,19 +71,17 @@
 	const { form: form1, reset: reset1 } = createForm({
 		onSubmit: async (values) => {
 			console.log('reached onSubmit');
-			console.log('reached onSubmit with values: ', values);
 			for await (const comment of values.comment) {
-				if (comment != null) {
+				if (comment == null) {
+					continue;
+				} else {
 					let id = Object.keys(comment);
-					let content: string[] = Object.values(comment);
+					let content: Array<string> = Object.values(comment);
 					if (clickedPostId === id[0]) {
 						await GQL_CreateComment.mutate({
 							variables: { input: { content: content[0], postId: clickedPostId } }
 						});
 					}
-				}
-				if (comment == null) {
-					continue;
 				}
 			}
 		}
@@ -109,60 +107,61 @@
 <div class="post-container">
 	<!-- ----------------------HOME SECTION------------------------------- -->
 	{#if $GQL_Posts.data?.posts.edges && mainProp === 'home'}
-		{#each $GQL_Posts.data?.posts.edges as post, i}
-			{#await GQL_PostComments.fetch( { variables: { postId: post?.node?.id }, policy: CachePolicy.NetworkOnly } ) then value}
-				{#if post && post?.node !== null}
-					<div class="card w-96 bg-base-100 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title">{post.node.title}</h2>
-							<p>{post.node.content}</p>
-							<div class="card-actions justify-end">
-								<button
-									on:click={async () => {
-										post.node &&
-											(await GQL_UpvotePost.mutate({
-												variables: {
-													id: post.node.id
-												}
-											}));
-									}}
-									class="btn btn-primary">Upvote</button
-								>
-								<button
-									on:click={async () => {
-										post.node &&
-											(await GQL_DownvotePost.mutate({
-												variables: {
-													id: post.node.id
-												}
-											}));
-									}}
-									class="btn btn-primary">Downvote</button
-								>
-								<p>
-									writer:
-									<a
+		<form use:form1>
+			{#each $GQL_Posts.data?.posts.edges as post, i}
+				{#await GQL_PostComments.fetch( { variables: { postId: post?.node?.id }, policy: CachePolicy.NetworkOnly } ) then value}
+					{#if post && post?.node !== null}
+						<div class="card w-96 bg-base-100 shadow-xl">
+							<div class="card-body">
+								<h2 class="card-title">{post.node.title}</h2>
+								<p>{post.node.content}</p>
+								<div class="card-actions justify-end">
+									<button
 										on:click={async () => {
-											post.node?.writer && (usernameForProfile = post.node.writer.username);
-											await GQL_User.fetch({ variables: { username: usernameForProfile } });
-											await goto(`/users/${$GQL_User.data?.user}`);
+											post.node &&
+												(await GQL_UpvotePost.mutate({
+													variables: {
+														id: post.node.id
+													}
+												}));
 										}}
-										class="link">{post.node.writer ? post.node.writer.username : 'anonymous'}</a
+										class="btn btn-primary">Upvote</button
 									>
-								</p>
-								<p>points: {post.node.points}</p>
-							</div>
-							{#if value.data?.PostComments.length}
-								<h3 class="text-xl">Comments:</h3>
-								{#each value.data?.PostComments as comment}
-									<p>Anonymous: {comment.content}</p>
-								{/each}
-							{/if}
-							<form use:form1>
+									<button
+										on:click={async () => {
+											post.node &&
+												(await GQL_DownvotePost.mutate({
+													variables: {
+														id: post.node.id
+													}
+												}));
+										}}
+										class="btn btn-primary">Downvote</button
+									>
+									<p>
+										writer:
+										<a
+											on:click={async () => {
+												post.node?.writer && (usernameForProfile = post.node.writer.username);
+												await GQL_User.fetch({ variables: { username: usernameForProfile } });
+												await goto(`/users/${$GQL_User.data?.user}`);
+											}}
+											class="link">{post.node.writer ? post.node.writer.username : 'anonymous'}</a
+										>
+									</p>
+									<p>points: {post.node.points}</p>
+								</div>
+								{#if value.data?.PostComments.length}
+									<h3 class="text-xl">Comments:</h3>
+									{#each value.data?.PostComments as comment}
+										<p>Anonymous: {comment.content}</p>
+									{/each}
+								{/if}
 								<input
 									type="text"
 									class="input input-bordered min-w-full max-w-xs my-2"
 									name="comment.{i}.{post.node.id}"
+									value="Replace with comment"
 								/>
 								<button
 									class={`btn ${post.node.id}`}
@@ -172,14 +171,14 @@
 										console.log('we here after');
 									}}>Create Comment</button
 								>
-							</form>
+							</div>
 						</div>
-					</div>
-				{/if}
-			{:catch error}
-				{error.message}
-			{/await}
-		{/each}
+					{/if}
+				{:catch error}
+					{error.message}
+				{/await}
+			{/each}
+		</form>
 		<!-- ----------------------MY PROFILE SECTION------------------------------- -->
 	{:else if $GQL_UserPosts.data && mainProp === 'my_profile'}
 		{#each $GQL_UserPosts.data?.UserPosts as post}
