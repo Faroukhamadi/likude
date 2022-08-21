@@ -5,12 +5,14 @@ package gql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Faroukhamadi/likude/ent"
 )
 
 // CreateComment is the resolver for the createComment field.
 func (r *mutationResolver) CreateComment(ctx context.Context, input ent.CreateCommentInput) (*ent.Comment, error) {
+	fmt.Println("inside create comment mutation")
 	return ent.FromContext(ctx).Comment.
 		Create().
 		SetInput(input).

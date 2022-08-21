@@ -70,14 +70,20 @@
 
 	const { form: form1, reset: reset1 } = createForm({
 		onSubmit: async (values) => {
-			console.log('clickedPostId from onSubmit: ', clickedPostId);
-			for (const comment of values.comment) {
-				let id = Object.keys(comment);
-				let content: string[] = Object.values(comment);
-				if (clickedPostId === id[0]) {
-					await GQL_CreateComment.mutate({
-						variables: { input: { content: content[0], postId: clickedPostId } }
-					});
+			console.log('reached onSubmit');
+			console.log('reached onSubmit with values: ', values);
+			for await (const comment of values.comment) {
+				if (comment != null) {
+					let id = Object.keys(comment);
+					let content: string[] = Object.values(comment);
+					if (clickedPostId === id[0]) {
+						await GQL_CreateComment.mutate({
+							variables: { input: { content: content[0], postId: clickedPostId } }
+						});
+					}
+				}
+				if (comment == null) {
+					continue;
 				}
 			}
 		}
@@ -161,7 +167,9 @@
 								<button
 									class={`btn ${post.node.id}`}
 									on:click={(e) => {
+										console.log('we here');
 										clickedPostId = e.currentTarget.className.split(' ')[1];
+										console.log('we here after');
 									}}>Create Comment</button
 								>
 							</form>
