@@ -20,4 +20,4 @@
 </script>
 
 <Navbar {username} />
-<Main mainProp="home" {username} />
+<Main mainProp="home" {username} usernameForProfile="" />

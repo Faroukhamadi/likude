@@ -55,7 +55,6 @@ func main() {
 	if err := client.Schema.Create(ctx, migrate.WithGlobalUniqueID(true)); err != nil {
 		log.Fatal(err)
 	}
-	client.User.Create()
 	users, err := client.User.Query().All(ctx)
 	if err != nil {
 		log.Fatal(err)

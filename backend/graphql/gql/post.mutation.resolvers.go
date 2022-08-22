@@ -12,6 +12,7 @@ import (
 
 // CreatePost is the resolver for the createPost field.
 func (r *mutationResolver) CreatePost(ctx context.Context, input ent.CreatePostInput) (*ent.Post, error) {
+	fmt.Println("this is the user id: ", input.WriterID)
 	return ent.FromContext(ctx).Post.
 		Create().
 		SetInput(input).

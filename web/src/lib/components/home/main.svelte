@@ -26,7 +26,6 @@
 
 	$: browser && GQL_Posts.fetch();
 
-	// conditional here
 	$: browser &&
 		userId !== undefined &&
 		mainProp === 'my_profile' &&
@@ -38,8 +37,7 @@
 
 	$: browser && localStorage.getItem('sid') && (jwt = parseJWT(localStorage.getItem('sid')!));
 
-	// conditional here
-	$: jwt && mainProp === 'my_profile' && GQL_User.fetch({ variables: { username: jwt.username } });
+	$: jwt && GQL_User.fetch({ variables: { username: jwt.username } });
 
 	$: !$GQL_User.isFetching && (userId = $GQL_User.data?.user);
 
